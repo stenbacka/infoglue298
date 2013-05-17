@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+ 
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html>
+<head>
+	<title>$ui.getString("tool.managementtool.exportRepository.header")</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	
+	<link rel="stylesheet" type="text/css" href="css/cms.css" /> 
+	<link rel="stylesheet" type="text/css" href="css/infogluecommons.css" /> 
+	
+	<script language="JavaScript" src="script/listview.js"></script>
+	<script type="text/javascript" src="script/infogluecommons.js"></script>
+	
+	<script language="JavaScript">
+	<!--
+		
+		/**
+		 * This method submits the form and shows a wait-dialog.
+		 */
+		 
+		function submitForm()
+		{
+			moveDiv("savingLayer", "20px", "20px");
+			resizeDiv("savingLayer", "350px", "150px");
+			showDiv("savingLayer");
+			document.editForm.submit();
+		}
+
+		
+	-->
+	</script>
+	
+	<style type="text/css">
+		fieldset
+		{
+			border: 1px solid #cccccc;
+			width: 450px;
+		}
+		legend
+		{
+			color: #000000;
+			background: #c6d3e7;
+			border: 1px solid #cccccc;
+			padding: 2px 6px
+		}
+		label
+		{
+			width: 200px;
+			float: left;
+			text-align: right;
+			margin-right: 0.5em;
+			display: block;
+		}
+		.narrowLabel
+		{
+			width: 100px;
+		}
+		select
+		{
+			background: white;
+			border: 1px solid #cccccc;
+			font-family: Verdana, Arial, San serif;
+			font-size: 8pt;
+			width: 200px;
+		}
+		input
+		{
+			background: white;
+			border: 1px solid #cccccc;
+			font-family: Verdana, Arial, San serif;
+			font-size: 8pt;
+			width: 200px;
+		}
+		.wideButton
+		{
+			background: #d6d3ce;
+			border: 1px solid #848284;
+			font-family: Verdana, Arial, San serif;
+			font-size: 10pt;
+			width: 100px;
+		}
+		p
+		{
+			line-heigh: 12px;
+			margin: 0px;
+			padding-bottom: 4px;
+			clear: both;
+		}
+	</style>
+	
+	<META HTTP-EQUIV="pragma" CONTENT="no-cache" />
+	<META HTTP-EQUIV="expires" CONTENT="-1" />	
+</head>
+
+<body class="managementtooledit">
+
+<div class="fullymarginalized">
+
+<div id="savingLayer" class="infobackground">
+	<div class="infoheader">Exporting repository</div>
+	<div class="infobody">
+		<br>Exporting repository - please wait!<br><br>
+		<img src="images/progressbar.gif">
+	</div>
+</div>
+
+<form name="editForm" method="POST" action="ExportRepository.action">
+<input type="hidden" name="repositoryId" value="$!repositoryId">
+<table width="300">
+	<tr>
+		<td class="biglabel">
+			$ui.getString("tool.managementtool.exportRepository.header")
+		</td>
+	</tr>		
+	<tr>
+		<td>
+			$ui.getString("tool.managementtool.exportRepository.introduction")<br/><br/>
+			To view running or old exports click <a href="ExportRepository!showProcesses.action">here</a>.<br/><br/>
+		</td>
+	</tr>		
+	<tr>
+		<td>
+	 		<fieldset>
+			<legend>Export options</legend>
+	 		<p>
+		 		<label for="assetMaxSize">$ui.getString("tool.contenttool.exportContent.assetMaxSizeLabel"):</label>
+		 		<select name="assetMaxSize">
+		 			<option value="-1" #checkSelected("-1" "$assetMaxSize")>No limit</option>
+		 			<option value="50000" #checkSelected("50000" "$assetMaxSize")>50 KB</option>
+		 			<option value="100000" #checkSelected("100000" "$assetMaxSize")>100 KB</option>
+		 			<option value="300000" #checkSelected("300000" "$assetMaxSize")>300 KB</option>
+		 			<option value="500000" #checkSelected("500000" "$assetMaxSize")>500 KB</option>
+		 			<option value="1000000" #checkSelected("1000000" "$assetMaxSize")>1 MB</option>
+		 			<option value="5000000" #checkSelected("5000000" "$assetMaxSize")>5 MB</option>
+		 			<option value="10000000" #checkSelected("10000000" "$assetMaxSize")>10 MB</option>
+		 			<option value="100000000" #checkSelected("100000000" "$assetMaxSize")>100 MB</option>
+		 		</select>
+	 		</p>
+	 		<p>
+				<label for="exportFileName">Export file name (optional):</label>
+				<input type="textfield" name="exportFileName" value="">
+	 		</p>
+	 		<p>
+				<label for="exportFileName">Additional repositories to include:</label>
+				<select name="repositoryId" multiple="true" size="10">
+				#foreach($repository in $repositories)
+					#if($repository.id != $!repositoryId)
+						<option value="$repository.id"> $repository.name</option>
+					#end
+				#end		
+				</select>
+	 		</p>
+	 		<p>
+				<label for="exportFormat">Export format:</label>
+				<select name="exportFormat">
+					<option value="3">3 (optimized)</option>
+					<option value="2">2</option>
+				</select>
+	 		</p>
+	 		<p>
+				<label for="onlyPublishedVersions">Only published versions:</label>
+				<select name="onlyPublishedVersions">
+					<option value="false">No</option>
+					<option value="true">Yes</option>
+				</select>
+	 		</p>
+			</fieldset><br/>
+		</td>
+	</tr>
+	<tr>
+		<td>
+			<a href="javascript:submitForm();"><img src="$ui.getString("images.contenttool.buttons.save")" width="50" height="25" border="0"></a>
+			<a href="javascript:window.close();"><img border="0" src="$ui.getString("images.contenttool.buttons.close")" width="50" height="25"></a>
+		</td>
+	</tr>
+
+	</form>	
+</table>
+</div>
+
+</body>
+</html>

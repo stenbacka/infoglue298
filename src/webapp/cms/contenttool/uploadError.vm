@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+ 
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html>
+<head>
+	<title>$ui.getString("tool.contenttool.fileUpload.fileUploadFailedHeader")</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	
+	<link rel="stylesheet" type="text/css" href="css/cms.css" /> 
+	<link rel="stylesheet" type="text/css" href="css/infogluecommons.css" /> 
+	
+	<META HTTP-EQUIV="pragma" CONTENT="no-cache" />
+	<META HTTP-EQUIV="expires" CONTENT="-1" />	
+	
+	#if($useFckUploadMessages)
+	<script type='text/javascript'>window.parent.OnUploadCompleted(101, '', '', '$ui.getString("$reasonKey")');</script>
+	#end
+	
+</head>
+
+<body class="contenttooledit">
+
+<div class="fullymarginalized">
+
+<table width="300">
+	<tr>
+		<td class="biglabel">
+			$ui.getString("tool.contenttool.fileUpload.fileUploadFailedHeader") $!this.uploadErrorMaxSize
+		</td>
+	</tr>		
+	<tr>
+		<td>
+			$ui.getString("$reasonKey")
+		</td>
+	</tr>		
+	<tr>
+		<td>
+			<a href="javascript:history.back();">$ui.getString("tool.contenttool.fileUpload.fileUploadFailedBackLabel")</a>
+		</td>
+	</tr>
+</table>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+ 
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html>
+<head>
+	<title>$ui.getString("tool.managementtool.importRepositoryCopy.header")</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	
+	<link rel="stylesheet" type="text/css" href="css/cms.css" /> 
+	<link rel="stylesheet" type="text/css" href="css/infogluecommons.css" /> 
+	
+	<script language="JavaScript" src="script/listview.js"></script>
+	<script type="text/javascript" src="script/infogluecommons.js"></script>
+	
+	<script language="JavaScript">
+	<!--
+		
+		/**
+		 * This method submits the form and shows a wait-dialog.
+		 */
+		 
+		function submitForm()
+		{
+			moveDiv("savingLayer", "20px", "20px");
+			resizeDiv("savingLayer", "350px", "150px");
+			showDiv("savingLayer");
+			document.editForm.submit();
+		}
+
+		
+	-->
+	</script>
+	
+	<META HTTP-EQUIV="pragma" CONTENT="no-cache" />
+	<META HTTP-EQUIV="expires" CONTENT="-1" />	
+</head>
+
+<body class="managementtooledit">
+
+<div id="savingLayer" class="infobackground">
+	<div class="infoheader">Copying repository</div>
+	<div class="infobody">
+		<br>Copying repository - please wait!<br><br>
+		<img src="images/progressbar.gif">
+	</div>
+</div>
+
+<div class="fullymarginalized">
+
+<form name="editForm" method="POST" action="ImportRepository!copy.action">
+<input type="hidden" name="repositoryId" value="$repositoryId"/>
+<table width="300" border="0">
+	<tr>
+		<td class="biglabel">
+			$ui.getString("tool.managementtool.importRepositoryCopy.header")
+		</td>
+	</tr>		
+	<tr>
+		<td>
+			$ui.getString("tool.managementtool.importRepositoryCopy.introduction")<br/><br/>
+		</td>
+	</tr>	
+	<tr>
+		<td>
+			$ui.getString("tool.managementtool.importRepository.replacementsLabel")<br/>
+			<textarea name="replacements" style="width: 500px; height: 200px;">$standardReplacement</textarea>
+		</td>
+	</tr>
+	<tr>
+		<td>
+			Export format:<br/>
+			<select name="exportFormat">
+				<option value="3">3 (optimized)</option>
+				<option value="2">2</option>
+			</select>
+		</td>
+	</tr>
+	<tr>
+		<td>
+			$ui.getString("tool.managementtool.importRepositoryCopy.onlyLatestVersionsLabel")<br/>
+			<input type="checkbox" name="onlyLatestVersions" value="true" checked="checked">
+		</td>
+	</tr>
+	<tr>
+		<td>
+			<a href="javascript:submitForm();"><img src="$ui.getString("images.contenttool.buttons.save")" width="50" height="25" border="0"></a>
+			<a href="javascript:window.close();"><img border="0" src="$ui.getString("images.contenttool.buttons.close")" width="50" height="25"></a>
+		</td>
+	</tr>
+
+	</form>	
+</table>
+</div>
+
+</body>
+</html>

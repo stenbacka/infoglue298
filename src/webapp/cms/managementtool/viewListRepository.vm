@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<SCRIPT LANGUAGE="JavaScript">
+function reloadMenu()
+		{
+			var menuFrame = parent.header;
+			menuFrame.location.reload();
+		}
+</SCRIPT>
+
+#beginManagementTool("tool.managementtool.repositoryList.header" "tool.managementtool.repositoryList.header" "")
+
+#set($lvConstraint = 1) 
+#lvHead(["Name","Description", "Dns Name"] "tool.managementtool.deleteRepositories.header" "DeleteRepository.action" "ViewListRepository.action?title=Repositories" "tool.managementtool.deleteRepositories.text")
+
+#set($cnt = 0)
+#foreach ($repositoryVO in $repositories)
+	#set( $repositoryId = $repositoryVO.getRepositoryId() ) 
+	
+	#set( $rowUrl = "ViewRepository.action?repositoryId=$repositoryVO.getRepositoryId()&title=Repository%20details")
+	#set( $row = ["<input type='hidden' name='rowtitle' value='$repositoryVO.getName()'/> <a href=$rowUrl>$repositoryVO.getName()</a>","$repositoryVO.getDescription()","$repositoryVO.getDnsName()"])
+	#set($cnt = $cnt + 1)
+
+	#lvAddRow($row $cnt $repositoryId)
+#end
+#lvEnd()
+<script>reloadMenu()</script>
+#endManagementTool()

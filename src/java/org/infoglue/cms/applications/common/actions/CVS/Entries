@@ -1,0 +1,16 @@
+/AbstractAction.java/1.3/Mon Oct  9 19:27:51 2006//TinfoglueUppsala2982repopatch
+/AbstractFormAction.java/1.3/Mon Oct  9 19:27:51 2006//TinfoglueUppsala2982repopatch
+/ConfirmRedirect.java/1.3/Sun Mar  5 21:55:00 2006//TinfoglueUppsala2982repopatch
+/Error.java/1.1.1.1/Mon Nov 29 15:28:07 2004//TinfoglueUppsala2982repopatch
+/Errors.java/1.1.1.1/Mon Nov 29 15:28:07 2004//TinfoglueUppsala2982repopatch
+/ExtendedRedirect.java/1.3/Sun Mar  5 21:55:00 2006//TinfoglueUppsala2982repopatch
+/InfoGlueAbstractAction.java/1.55.2.3.2.1/Sun Dec 30 20:21:44 2012//TinfoglueUppsala2982repopatch
+/InfoGluePropertiesAbstractAction.java/1.1.1.1/Mon Nov 29 15:28:07 2004//TinfoglueUppsala2982repopatch
+/LoginAction.java/1.7/Mon Sep 22 08:48:55 2008//TinfoglueUppsala2982repopatch
+/ModelAction.java/1.2/Sun Mar  5 21:55:00 2006//TinfoglueUppsala2982repopatch
+/SimpleXmlServiceAction.java/1.24/Sun Sep 16 14:40:44 2012//TinfoglueUppsala2982repopatch
+/SubscriptionsAction.java/1.12.2.1/Sun Sep 16 14:40:44 2012//TinfoglueUppsala2982repopatch
+/TreeViewAbstractAction.java/1.4/Sun Sep 16 14:40:44 2012//TinfoglueUppsala2982repopatch
+/VelocityServlet.java/1.12/Sun Sep 16 14:40:45 2012//TinfoglueUppsala2982repopatch
+/ViewInlineOperationMessagesAction.java/1.9/Sun Sep 16 14:40:45 2012//TinfoglueUppsala2982repopatch
+/WebworkAbstractAction.java/1.20/Sun Sep 16 14:40:45 2012//TinfoglueUppsala2982repopatch

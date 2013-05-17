@@ -1,0 +1,52 @@
+#beginCommonToolV3("tool.managementtool.viewRoleList.header" "" "" true true true)
+
+<script type="text/javascript">
+	
+	YAHOO.example.Data = {
+	    roles: 
+	    [
+	    	#foreach ($roleVO in $roles)
+	    		{sel:0,id:"$roleVO.name", displayName:"$roleVO.displayName", description:"$roleVO.description"}#if($velocityCount < $roles.size()),#end
+		 	#end
+	    ]
+	}
+	
+	YAHOO.util.Event.addListener(window, "load", function() {
+	    YAHOO.example.Basic = new function() {
+	        var myColumnDefs = [
+	            {key:"sel", label:"", formatter:"checkbox", width:"30px"},
+	            {key:"id", label:"$ui.getString("entity.Role.roleName.label")", sortable:true, resizeable:true, formatter:"link"},
+	            {key:"displayName", label:"$ui.getString("entity.Role.displayName.label")", sortable:true, resizeable:true},
+	            {key:"description", label:"$ui.getString("entity.Role.description.label")", sortable:true, resizeable:true}
+	        ];
+			
+			this.myDataSource = new YAHOO.util.DataSource(YAHOO.example.Data.roles);
+	        this.myDataSource.responseType = YAHOO.util.DataSource.TYPE_JSARRAY;
+	        this.myDataSource.responseSchema = {
+	            fields: ["id","name","displayName","description"]
+	        };
+			
+	        this.myDataTable = new YAHOO.widget.DataTable("roles", myColumnDefs, this.myDataSource);
+	        this.myDataTable.subscribe("rowClickEvent",this.myDataTable.onEventSelectRow);
+	        this.myDataTable.subscribe("checkboxClickEvent", this.myDataTable.onEventSelectRow);
+			
+			this.myDataTable.subscribe("linkClickEvent", function(oArgs){
+				YAHOO.util.Event.stopEvent(oArgs.event);
+	            var oRecord = this.getRecord(oArgs.target);
+	            //alert(YAHOO.lang.dump(oRecord.getData()));
+	            document.location.href = "ViewRole!v3.action?roleName=" + oRecord.getData().id;
+	        });
+	        
+	    };
+	});
+</script>
+
+#menuToolbar("" $buttons $rightButtons) 
+
+<div style="clear: both;"></div>
+
+<div id="roles" class="igScrollArea"></div>
+
+#footerToolbar($footerButtons)
+
+#endManagementTool()

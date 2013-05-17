@@ -1,0 +1,16 @@
+/CustomClassExecutor.java/1.4/Mon Mar  6 17:28:55 2006//TinfoglueUppsala2982repopatch
+/CustomWorkflowAction.java/1.1.1.1/Mon Nov 29 15:28:34 2004//TinfoglueUppsala2982repopatch
+/DatabaseSession.java/1.5/Fri Nov  9 16:31:11 2007//TinfoglueUppsala2982repopatch
+/InfoGlueAuthorizationCondition.java/1.3/Mon Mar  6 17:28:55 2006//TinfoglueUppsala2982repopatch
+/InfoGlueBasicWorkflow.java/1.2/Thu Jul  3 11:49:55 2008//TinfoglueUppsala2982repopatch
+/InfoGlueJDBCPropertySet.java/1.17/Sun Sep 16 14:40:49 2012//TinfoglueUppsala2982repopatch
+/InfoGlueJDBCWorkflowStore.java/1.3/Mon Mar  6 17:28:55 2006//TinfoglueUppsala2982repopatch
+/InfoGlueMySQLJDBCWorkflowStore.java/1.2/Mon Mar  6 17:28:55 2006//TinfoglueUppsala2982repopatch
+/InfoGlueWorkflowFactory.java/1.12/Fri Aug 22 07:53:30 2008//TinfoglueUppsala2982repopatch
+/Owner.java/1.3/Wed Sep 21 09:56:58 2005//TinfoglueUppsala2982repopatch
+/OwnerFactory.java/1.2/Wed Sep 21 09:56:58 2005//TinfoglueUppsala2982repopatch
+/OwnerStepFilter.java/1.10/Mon Mar  6 17:28:55 2006//TinfoglueUppsala2982repopatch
+/StepFilter.java/1.3/Fri Jan  7 14:15:14 2005//TinfoglueUppsala2982repopatch
+/WebWorkExecutor.java/1.2/Mon Mar  6 17:28:55 2006//TinfoglueUppsala2982repopatch
+/WorkflowFacade.java/1.41/Sun Sep 16 14:40:49 2012//TinfoglueUppsala2982repopatch
+D/hibernate////
