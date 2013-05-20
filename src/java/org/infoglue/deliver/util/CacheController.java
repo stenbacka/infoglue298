@@ -930,13 +930,20 @@ public class CacheController extends Thread
 							    	try
 							    	{
 								    	logger.info("BeforesiteNodeVersionVO...");
-								    	Integer siteNodeId = SiteNodeVersionController.getController().getSiteNodeVersionVOWithId(new Integer(entityId)).getSiteNodeId();
-								    	if(siteNodeId != null)
-							    		{
-									    	logger.info("Before flushGroup2...");
-							    			cacheInstance.flushGroup("siteNode_" + siteNodeId);
-									    	logger.info("After flushGroup2...");
-							    		}
+								    	if (entityId == null || entityId.equals("null"))
+								    	{
+											logger.warn("entityId was null for siteNodeVersion cache clearing. entityId.type: " + entity.getClass() + ". entity: " + entity);
+								    	}
+								    	else
+								    	{
+									    	Integer siteNodeId = SiteNodeVersionController.getController().getSiteNodeVersionVOWithId(new Integer(entityId)).getSiteNodeId();
+									    	if(siteNodeId != null)
+								    		{
+										    	logger.info("Before flushGroup2...");
+								    			cacheInstance.flushGroup("siteNode_" + siteNodeId);
+										    	logger.info("After flushGroup2...");
+								    		}
+								    	}
 							    	}
 							    	catch(SystemException se)
 							    	{
