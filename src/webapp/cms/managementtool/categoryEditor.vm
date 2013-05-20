@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+#set($title = "tool.managementtool.editCategory.header")
+#if($model.unsaved)
+	#set($title = "tool.managementtool.createCategory.header")
+#end
+
+## Last parameter will become a parameter to ViewManagementToolToolBarAction
+## and get translated to model/parentId for New Category creation
+#beginManagementTool($title $title "categoryId=$!model.id")
+
+<script type="text/javascript" src="script/jquery/jquery-1.2.6.min.js"></script>
+<script type="text/javascript">
+<!--
+
+	function composeDisplayNameString()
+	{
+		var displayNameString = "";
+
+		$(".displayNameLanguageVariation").each(function (i) {
+			//alert("Adding:" + $(this).attr("id") + "-" + $(this).val());
+			if($(this).val() != "")
+				displayNameString = displayNameString + "," + $(this).attr("id") + "=[" + $(this).val() + "]";
+	    });
+
+		$("input[@id='model/displayName']").val(displayNameString.substring(1));
+		//$("#warningParagraph").html("<span style='color: red'>Remember to clear especially live deliver caches by hand.<br/>NiceURI settings are not immediately enforced automatically.</span>");
+		//$("#warning").show("slow");
+			
+		return true;
+	}
+	
+	$(document).ready(function(){
+		$("input[@id='model/displayName']").css("color","#999999");
+
+		$("input[@id='model/displayName']").click(function () {
+			alert("Use the form below - it assists you with the syntax");
+			$("#displayNameFields").show("slow");
+	    });
+	    
+		$(":input").change(function () {
+			composeDisplayNameString();
+	    });
+	});
+	
+//-->
+</script>
+
+<div id="warning" style="border: 1px solid black; background-color: white; color: black; padding: 4px; display: none; position: absolute; right: 50px; top: 100px; float:left;">
+	<p id="warningParagraph">
+	</p>
+	<a href="#" onclick="$('#warning').hide('slow');">Close</a>
+</div>
+
+
+<div class="fullymarginalized">
+<form method="POST" action="CategoryManagement!save.action">
+<table class="managementtooledit" cellpadding="2" cellspacing="2" border="0" width="100%" height="30">
+	<tr>
+		<td>
+			<a href="CategoryManagement!list.action">Root Categories</a>
+			#if($model.parentId)
+			> <a href="CategoryManagement!edit.action?categoryId=$model.parentId">Parent</a>
+			#end
+			#if($model.saved)
+			> $model.name
+			#end
+			
+			(was used by $references.size() entities)
+		</td>
+	</tr>
+	<tr>
+		<td>#editField("Category.name" "model/name" $!model.name "50")</td>
+	</tr>
+	<tr>
+		<td>
+			#editReadOnlyField("Category.displayName" "model/displayName" $!model.displayName "50" "READONLY")
+
+			<fieldset id="displayNameFields" style="display:none; padding: 4px; width: 100%;">
+				<legend>Language variations for $ui.getString("entity.Category.displayName.label")</legend>
+				<p>
+					#foreach($languageVO in $languages)
+						$languageVO.name:<br/> <input class="longtextfield displayNameLanguageVariation" style="width: 600px;" type="textfield" id="$languageVO.languageCode" name="$languageVO.languageCode" value="$!model.getLocalizedDisplayName($languageVO.languageCode,"none")"/><br/><br/>
+					#end
+					<a href="#" onclick="$('#displayNameFields').hide('slow');">Close</a>
+				</p>
+			</fieldset>
+	
+		</td>
+	</tr>
+	<tr>
+		<td>
+			$ui.getString("entity.Category.active.label")
+			<br/>
+			<select name="model/active">
+				<option value="true" #if($model.active) selected="true" #end>$ui.getString("tool.common.yes")</option>
+				<option value="false" #if(!$model.active) selected="true" #end>$ui.getString("tool.common.no")</option>
+			</select>
+		</td>
+	</tr>
+	<tr>
+		<td width="400">#editTextArea("Category.description" "model/description" $model.description "50" "3" "smalltextarea")</td>
+	</tr>
+	<tr>
+		<td width="400">
+			#if($model.saved)
+				<input type="hidden" name="model/categoryId" value="$model.categoryId"/>
+			#end
+			#if($model.parentId)
+				<input type="hidden" name="model/parentId" value="$model.parentId"/>
+			#end
+		</td>
+	</tr>
+	<tr>
+		<td>
+			<input type="image" src="$ui.getString("images.managementtool.buttons.save")" width="50" height="25" border="0">
+			#set($cancelURL = "CategoryManagement!list.action")
+			#if($model.parentId)
+				#set($cancelURL = "CategoryManagement!edit.action?categoryId=$model.parentId")
+			#end
+			<a href="$cancelURL"><img border="0" src="$ui.getString("images.managementtool.buttons.cancel")" width="50" height="25"></a>
+		</td>
+	</tr>
+</table>
+</form>
+#if($model.saved)
+	<table class="managementtooledit" cellpadding="2" cellspacing="2" border="0" width="100%" height="30">
+		<tr>
+			<td width="400">$ui.getString("entity.Category.subcategory.label")</td>
+		</tr>
+		<tr>
+			<td width="400">
+				#set($categories = $model.children)
+				#parse("/cms/managementtool/categoryList.vm")
+			</td>
+		</tr>
+	</table>
+#end
+</div>
+
+</body>
+</html>

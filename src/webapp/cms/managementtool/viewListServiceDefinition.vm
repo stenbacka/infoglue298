@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+#beginManagementTool("tool.managementtool.viewServiceDefinitionList.header" "tool.managementtool.viewServiceDefinitionList.header" "")
+
+#set($lvConstraint = 1) 
+#lvHead(["Name","Description","Classname"] "tool.managementtool.deleteServiceDefinitions.header" "DeleteServiceDefinition.action" "ViewListServiceDefinition.action?title=ServiceDefinitions" "tool.managementtool.deleteServiceDefinitions.text")
+
+#set($cnt = 0)
+#foreach ($serviceDefinitionVO in $serviceDefinitions)
+	#set( $serviceDefinitionId = $serviceDefinitionVO.getServiceDefinitionId() ) 
+	
+	#set( $rowUrl = "ViewServiceDefinition.action?serviceDefinitionId=$serviceDefinitionVO.getServiceDefinitionId()&title=Service%20definition%20details")
+	#set( $row = ["<input type='hidden' name='rowtitle' value='$serviceDefinitionVO.getName()'/> <a href=$rowUrl>$serviceDefinitionVO.getName()</a>","$serviceDefinitionVO.getDescription()","$serviceDefinitionVO.getClassName()"] )
+	#set($cnt = $cnt + 1)
+
+	#lvAddRow($row $cnt $serviceDefinitionId)
+#end
+
+#lvEnd()
+#endManagementTool()

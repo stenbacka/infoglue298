@@ -1,0 +1,42 @@
+/AccessConstraintExceptionBuffer.java/1.2/Mon Mar  6 18:48:26 2006//TinfoglueUppsala2982repopatch
+/ChainedStringManager.java/1.2/Mon Mar  6 18:48:26 2006//TinfoglueUppsala2982repopatch
+/ChangeNotificationController.java/1.12/Thu Sep 11 20:04:40 2008//TinfoglueUppsala2982repopatch
+/CmsContextListener.java/1.14/Sun Sep 16 14:40:49 2012//TinfoglueUppsala2982repopatch
+/CmsPropertyHandler.java/1.91.2.6.2.1/Mon May  6 06:23:11 2013//TinfoglueUppsala2982repopatch
+/CmsSecurityManager.java/1.1.1.1/Mon Nov 29 15:28:33 2004//TinfoglueUppsala2982repopatch
+/CmsSecurityManagerImpl.java/1.1.1.1/Mon Nov 29 15:28:33 2004//TinfoglueUppsala2982repopatch
+/CmsSessionContextListener.java/1.5.2.2/Sun Sep 16 14:40:49 2012//TinfoglueUppsala2982repopatch
+/CmsSimpleFormatter.java/1.2/Mon Mar  6 18:49:15 2006//TinfoglueUppsala2982repopatch
+/Constants.java/1.1.1.1/Mon Nov 29 15:28:33 2004//TinfoglueUppsala2982repopatch
+/ConstraintExceptionBuffer.java/1.2/Mon Mar  6 18:49:15 2006//TinfoglueUppsala2982repopatch
+/DateHelper.java/1.2/Mon Mar  6 18:49:15 2006//TinfoglueUppsala2982repopatch
+/DesEncryptionHelper.java/1.1/Sun Sep 16 14:40:49 2012//TinfoglueUppsala2982repopatch
+/DocumentConverterHelper.java/1.5.2.3/Sun Sep 16 14:40:49 2012//TinfoglueUppsala2982repopatch
+/DomainUtils.java/1.2/Mon Mar  6 18:49:15 2006//TinfoglueUppsala2982repopatch
+/FileLogger.java/1.3/Mon Mar  6 18:49:15 2006//TinfoglueUppsala2982repopatch
+/FileUploadHelper.java/1.12/dummy timestamp//TinfoglueUppsala2982repopatch
+/NotificationListener.java/1.2/Mon Mar  6 18:49:15 2006//TinfoglueUppsala2982repopatch
+/NotificationMessage.java/1.3/Sat Dec 15 23:17:33 2007//TinfoglueUppsala2982repopatch
+/PasswordGenerator.java/1.1.1.1/Mon Nov 29 15:28:33 2004//TinfoglueUppsala2982repopatch
+/RegexpHelper.java/1.3/Mon Mar  6 18:49:15 2006//TinfoglueUppsala2982repopatch
+/RemoteCacheUpdater.java/1.14/Fri Feb 27 13:03:34 2009//TinfoglueUppsala2982repopatch
+/ResourceHelper.java/1.3/Mon Mar  6 18:50:03 2006//TinfoglueUppsala2982repopatch
+/SetCharacterEncodingFilter.java/1.12/Sun Sep 16 14:40:49 2012//TinfoglueUppsala2982repopatch
+/SimpleStringManager.java/1.6/Sun Sep 16 14:40:49 2012//TinfoglueUppsala2982repopatch
+/StringManager.java/1.1.1.1/Mon Nov 29 15:28:33 2004//TinfoglueUppsala2982repopatch
+/StringManagerFactory.java/1.3/Sun Jul 10 21:05:50 2005//TinfoglueUppsala2982repopatch
+/SystemStrings_en.properties/1.1.1.1/Mon Nov 29 15:28:33 2004//TinfoglueUppsala2982repopatch
+/SystemStrings_fr.properties/1.1/Tue Nov 15 08:47:51 2005//TinfoglueUppsala2982repopatch
+/TransactionHistoryWriter.java/1.3/Mon Mar  6 18:50:03 2006//TinfoglueUppsala2982repopatch
+/URLHelper.java/1.1/Thu Sep  1 16:26:38 2005//TinfoglueUppsala2982repopatch
+/XMLHelper.java/1.3/Wed Sep 27 14:34:30 2006//TinfoglueUppsala2982repopatch
+/XMLNotificationWriter.java/1.3/Wed Apr 15 20:42:52 2009//TinfoglueUppsala2982repopatch
+D/css////
+D/dom////
+D/graphics////
+D/handlers////
+D/mail////
+D/sorters////
+D/validators////
+D/webdav////
+D/workflow////

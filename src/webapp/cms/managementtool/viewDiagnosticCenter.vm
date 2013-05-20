@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+#beginManagementTool("tool.managementtool.viewDiagnosticCenter.header" "tool.managementtool.viewDiagnosticCenter.header" "")
+
+<div class="fullymarginalized" style="color: black;">
+
+	<h3>$ui.getString("tool.managementtool.deliverApplicationState.header"):</h3>
+	<table width="500px" border="0">
+		<tr>
+			<th style="border-bottom: 1px solid #CCC;" align="left" width="70%">CMS Context/URL</th>
+			<th style="border-bottom: 1px solid #CCC;" align="left">Actions</th>
+		</tr>
+		<tr>
+			<td>
+				<a href="ViewApplicationState.action">infoglueCMS</a>
+			</td>
+			<td>
+				<a href="ViewApplicationState!clearCaches.action?returnAddress=$formatter.encodeURI($originalFullURL)">Clear caches</a> | <a href="ViewLogging.action" target="_blank">Logs</a>
+			</td>
+		</tr>
+		<tr>
+			<td colspan="2">&nbsp;</td>
+		</tr>		
+		<tr>
+			<th style="border-bottom: 1px solid #CCC;" align="left" width="70%">Working/Preview Context/URL</th>
+			<th style="border-bottom: 1px solid #CCC;" align="left">Actions</th>
+		</tr>
+		#foreach($url in $internalDeliverUrls)
+		<tr>
+			<td>
+				<a href="$url/ViewApplicationState.action">$url</a>
+			</td>
+			<td>
+				<a href="$url/ViewApplicationState!clearCaches.action?returnAddress=$formatter.encodeURI($originalFullURL)">Clear caches</a> | <a href="$url/ViewLogging.action" target="_blank">Logs</a>
+			</td>
+		</tr>
+		#end
+		<tr>
+			<td colspan="2">&nbsp;</td>
+		</tr>		
+		<tr>
+			<th style="border-bottom: 1px solid #CCC;" align="left" width="70%">Live Context/URL</th>
+			<th style="border-bottom: 1px solid #CCC;" align="left">Actions</th>
+		</tr>
+		#foreach($url in $publicDeliverUrls)
+		<tr>
+			<td>
+				<a href="$url/ViewApplicationState.action">$url</a>
+			</td>
+			<td>
+				<a href="$url/ViewApplicationState!clearCaches.action?returnAddress=$formatter.encodeURI($originalFullURL)">Clear caches</a> | <a href="$url/ViewLogging.action" target="_blank">Logs</a>
+			</td>
+		</tr>
+		#end
+		<tr>
+			<td colspan="2">&nbsp;</td>
+		</tr>		
+		<tr>
+			<th style="border-bottom: 1px solid #CCC;" align="left" width="70%">Statistics</th>
+			<th style="border-bottom: 1px solid #CCC;" align="left">&nbsp;</th>
+		</tr>
+		<tr><td width="70%">Number of siteNodes</td><td>$numberOfSiteNodes</td></tr>
+		<tr><td>Number of siteNodeVersions</td><td>$numberOfSiteNodeVersions</td></tr>
+		<tr><td>Number of contents</td><td>$numberOfContents</td></tr>
+		<tr><td>Number of content versions</td><td>$numberOfContentVersions</td></tr>
+		<tr><td>Number of digitalAssets</td><td>$numberOfDigitalAssets</td></tr>
+	</table>
+	<p>
+		Number of unused digitalAssets (could potentially be removed): $numberOfUnusedDigitalAssets<br />
+		SQL to remove unused assets: <br><br>
+		MySQL and SQLServer: 
+		<p style="background-color: white; width: 600px; border: 1px solid black; padding: 4px; color: blue;">delete from cmDigitalAsset cmDigitalAsset where cmDigitalAsset.assetKey NOT LIKE '%portletentityregistry.xml%' AND cmDigitalAsset.assetContentType NOT LIKE '%application%' AND cmDigitalAsset.digitalAssetId not in (select digitalAssetId from cmContentVersionDigitalAsset) AND cmDigitalAsset.digitalAssetId not in (select digitalAssetId from cmGroupPropertiesDigitalAsset) AND cmDigitalAsset.digitalAssetId not in (select digitalAssetId from cmRolePropertiesDigitalAsset) AND cmDigitalAsset.digitalAssetId not in (select digitalAssetId from cmUserPropertiesDigitalAsset)</p><br/>
+		Oracle: 
+		<p style="background-color: white; width: 600px; border: 1px solid black; padding: 4px; color: blue;">delete from cmDigAsset where cmDigAsset.assetKey NOT LIKE '%portletentityregistry.xml%' AND cmDigAsset.assetContentType NOT LIKE '%application%' AND cmDigAsset.digAssetId not in (select digAssetId from cmContVerDigAsset) AND cmDigAsset.digAssetId not in (select digAssetId from cmGroupPropDigAsset) AND cmDigAsset.digAssetId not in (select digAssetId from cmRolePropDigAsset) AND cmDigAsset.digAssetId not in (select digAssetId from cmUserPropDigAsset)</p><br/>
+	</p>
+		
+#endManagementTool()

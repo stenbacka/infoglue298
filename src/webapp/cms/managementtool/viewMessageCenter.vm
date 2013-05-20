@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+#beginManagementTool("tool.managementtool.viewMessageCenter.header" "tool.managementtool.viewMessageCenter.header" "")
+
+<script src="script/ajaxchat/scripts.js" language="JavaScript" type="text/javascript"></script>
+
+<div class="fullymarginalized" style="color: black;">
+
+	<div style="width:100%">
+		<div style="float: left; width:65%;"><h3>$ui.getString("tool.managementtool.messages.header"):</h3></div>
+		<div style="float: right; width:30%;"><h3>$ui.getString("tool.managementtool.loggedInUsers.header"):</h3></div>
+	</div>
+	<div style="width:100%">
+		<div id="outputList" style="float: left; width:65%; height: 300px; overflow: auto; border: 1px solid #333333; background-color: white;"></div>
+		<div id="outputList" style="float: right; width:30%; height: 300px; overflow: auto; border: 1px solid #333333; background-color: white;">
+		  <table width="100%" border="0">
+		  <tr style="background-color: #CCCCCC;">
+		  	<td>UserName</td><td>Last action</td>
+		  </tr>
+		  #foreach($sessionInfoBean in $sessionInfoBeanList)
+		  <tr>
+		  	<td><span title="$sessionInfoBean.principal.name">$sessionInfoBean.principal.firstName $sessionInfoBean.principal.lastName</span></td>
+		  	<td>$formatter.formatDate($sessionInfoBean.lastAccessedDate, "HH:mm:ss")</td>
+		  </tr>
+		  #end
+		  </table>
+		</div>
+	</div>
+	<div style="clear:both"/>	
+	<p>
+		<form id="chatForm" name="chatForm" onsubmit="return false;" action=""> 
+			<strong>$ui.getString("tool.managementtool.yourMessage.label"):</strong><br/>
+		  	<textarea id="message" name="message" class="normaltextfield" style="width:65%; height: 50px; border: 1px solid #333333;"/></textarea><br/>
+		  	<input type="checkbox" id="isSystemMessage" name="isSystemMessage" value="true" checked="1"/> $ui.getString("tool.managementtool.isSystemMessage.label")<br/>
+		  	<input id="submit" type="button" value="$ui.getString("tool.managementtool.sendMessage.label")" onclick="sendComment();"/>
+	  	</form>
+	</p>
+
+#endManagementTool()

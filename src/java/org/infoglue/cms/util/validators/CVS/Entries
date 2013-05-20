@@ -1,0 +1,14 @@
+/AbstractValidator.java/1.1.1.1/Mon Nov 29 15:28:34 2004//TinfoglueUppsala2982repopatch
+/CommonsValidator.java/1.3/Mon Mar  6 17:28:05 2006//TinfoglueUppsala2982repopatch
+/Constants.java/1.1.1.1/Mon Nov 29 15:28:34 2004//TinfoglueUppsala2982repopatch
+/ConstraintRule.java/1.1.1.1/Mon Nov 29 15:28:34 2004//TinfoglueUppsala2982repopatch
+/ConstraintRuleList.java/1.3/Mon Mar  6 17:28:04 2006//TinfoglueUppsala2982repopatch
+/ContentVersionBean.java/1.1/Mon May 30 16:20:44 2005//TinfoglueUppsala2982repopatch
+/ContentVersionValidator.java/1.4/Thu Jul  3 11:49:55 2008//TinfoglueUppsala2982repopatch
+/EmailValidator.java/1.1.1.1/Mon Nov 29 15:28:34 2004//TinfoglueUppsala2982repopatch
+/FloatValidator.java/1.2/Mon Mar  6 17:28:05 2006//TinfoglueUppsala2982repopatch
+/IntegerValidator.java/1.1.1.1/Mon Nov 29 15:28:34 2004//TinfoglueUppsala2982repopatch
+/ProperNounValidator.java/1.1.1.1/Mon Nov 29 15:28:34 2004//TinfoglueUppsala2982repopatch
+/Range.java/1.1.1.1/Mon Nov 29 15:28:34 2004//TinfoglueUppsala2982repopatch
+/StringValidator.java/1.1.1.1/Mon Nov 29 15:28:34 2004//TinfoglueUppsala2982repopatch
+/ValidatorFactory.java/1.1.1.1/Mon Nov 29 15:28:34 2004//TinfoglueUppsala2982repopatch

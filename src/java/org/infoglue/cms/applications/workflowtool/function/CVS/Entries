@@ -1,0 +1,31 @@
+/Attach.java/1.6/Mon Oct  9 19:38:38 2006//TinfoglueUppsala2982repopatch
+/CategoryErrorPopulator.java/1.2/Mon May 21 15:19:50 2007//TinfoglueUppsala2982repopatch
+/CategoryProvider.java/1.4/Thu Sep 29 15:11:44 2005//TinfoglueUppsala2982repopatch
+/ContentCleaner.java/1.4/Fri Jun 15 14:00:56 2007//TinfoglueUppsala2982repopatch
+/ContentCreator.java/1.10/Fri Nov  9 16:26:46 2007//TinfoglueUppsala2982repopatch
+/ContentErrorPopulator.java/1.3/Fri Jun 15 14:30:55 2007//TinfoglueUppsala2982repopatch
+/ContentFunction.java/1.7/Mon Oct 10 20:47:21 2005//TinfoglueUppsala2982repopatch
+/ContentMover.java/1.9/Tue Nov  6 09:26:05 2007//TinfoglueUppsala2982repopatch
+/ContentPopulator.java/1.8/Sun May 25 21:24:08 2008//TinfoglueUppsala2982repopatch
+/ContentPropertysetPopulator.java/1.1/Mon Oct 10 20:47:32 2005//TinfoglueUppsala2982repopatch
+/ContentProvider.java/1.6/Mon Oct  9 19:38:38 2006//TinfoglueUppsala2982repopatch
+/ContentPublisher.java/1.9/Thu Jul  3 11:48:23 2008//TinfoglueUppsala2982repopatch
+/ContentTypeDefinitionProvider.java/1.4/Thu Sep 29 15:11:44 2005//TinfoglueUppsala2982repopatch
+/ErrorPopulator.java/1.8/Fri Jun 15 14:30:55 2007//TinfoglueUppsala2982repopatch
+/FilePopulator.java/1.5/Mon Oct  9 19:38:38 2006//TinfoglueUppsala2982repopatch
+/GroupsProvider.java/1.4/Mon Oct  9 19:38:38 2006//TinfoglueUppsala2982repopatch
+/InfoglueFunction.java/1.11/Mon Oct  9 19:38:38 2006//TinfoglueUppsala2982repopatch
+/LanguageProvider.java/1.7/Thu Nov 22 14:25:59 2007//TinfoglueUppsala2982repopatch
+/Owner.java/1.2/Thu Sep 29 15:11:44 2005//TinfoglueUppsala2982repopatch
+/PathContentProvider.java/1.5/Mon Oct  9 19:38:38 2006//TinfoglueUppsala2982repopatch
+/PreviewProvider.java/1.5/Sun Mar 12 10:53:41 2006//TinfoglueUppsala2982repopatch
+/PropertysetCleaner.java/1.4/Thu Sep 29 08:52:14 2005//TinfoglueUppsala2982repopatch
+/PropertysetPopulator.java/1.6/Thu Oct 25 08:58:01 2007//TinfoglueUppsala2982repopatch
+/RolesProvider.java/1.4/Mon Oct  9 19:38:38 2006//TinfoglueUppsala2982repopatch
+/SimpleCategoryProvider.java/1.5/Tue Oct 25 06:44:33 2005//TinfoglueUppsala2982repopatch
+/UserCreator.java/1.4/Mon Oct  9 19:38:38 2006//TinfoglueUppsala2982repopatch
+/UserErrorPopulator.java/1.2/Fri Jun 15 14:30:55 2007//TinfoglueUppsala2982repopatch
+/UserProvider.java/1.1/Thu Sep 29 13:46:37 2005//TinfoglueUppsala2982repopatch
+D/defaultvalue////
+D/email////
+D/title////

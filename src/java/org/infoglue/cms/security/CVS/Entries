@@ -1,0 +1,26 @@
+/AuthenticationModule.java/1.11/Thu Jan 24 20:17:13 2008//TinfoglueUppsala2982repopatch
+/AuthorizationModule.java/1.6.2.4/Sun Sep 16 14:40:48 2012//TinfoglueUppsala2982repopatch
+/BasicMethodAccessManager.java/1.2/Thu Jul  3 11:49:55 2008//TinfoglueUppsala2982repopatch
+/CASBasicAuthenticationModule.java/1.37/Tue Jul 15 11:46:23 2008//TinfoglueUppsala2982repopatch
+/CombinedJDBCBasicAuthorizationModule.java/1.5.2.5/Sun Sep 16 14:40:48 2012//TinfoglueUppsala2982repopatch
+/CombinedJNDIBasicAuthenticationModule.java/1.2/Thu Jan 24 20:17:13 2008//TinfoglueUppsala2982repopatch
+/CombinedJNDIBasicAuthorizationModule.java/1.6.2.5/Sun Sep 16 14:40:48 2012//TinfoglueUppsala2982repopatch
+/DummySSLSocketFactory.java/1.1/Sun Sep  3 21:20:46 2006//TinfoglueUppsala2982repopatch
+/DummyTrustManager.java/1.1/Sun Sep  3 21:20:45 2006//TinfoglueUppsala2982repopatch
+/GenericCombinedAuthorizationModule.java/1.6.2.5/Sun Sep 16 14:40:48 2012//TinfoglueUppsala2982repopatch
+/InfoGlueAuthenticationFilter.java/1.47/Sun Sep 16 14:40:48 2012//TinfoglueUppsala2982repopatch
+/InfoGlueBasicAuthenticationModule.java/1.19/Thu Jul  3 11:49:55 2008//TinfoglueUppsala2982repopatch
+/InfoGlueBasicAuthorizationModule.java/1.23.2.8/Sun Sep 16 14:40:48 2012//TinfoglueUppsala2982repopatch
+/InfoGlueExtranetAuthenticationModule.java/1.1.1.1/Mon Nov 29 15:28:31 2004//TinfoglueUppsala2982repopatch
+/InfoGlueGroup.java/1.7/Thu Feb 26 11:47:49 2009//TinfoglueUppsala2982repopatch
+/InfoGlueJ2EEAuthenticationModule.java/1.9/Thu Jan 24 20:17:13 2008//TinfoglueUppsala2982repopatch
+/InfoGlueJDBCAuthorizationModule.java/1.10.2.4/Sun Sep 16 14:40:48 2012//TinfoglueUppsala2982repopatch
+/InfoGluePrincipal.java/1.13/Thu Feb 26 11:47:49 2009//TinfoglueUppsala2982repopatch
+/InfoGlueRole.java/1.7/Thu Feb 26 11:47:49 2009//TinfoglueUppsala2982repopatch
+/JNDIBasicAuthenticationModule.java/1.13/Thu Jan 24 20:17:13 2008//TinfoglueUppsala2982repopatch
+/JNDIBasicAuthorizationModule.java/1.35.2.4/Sun Sep 16 14:40:48 2012//TinfoglueUppsala2982repopatch
+/LenientFallbackJNDIBasicAuthorizationModule.java/1.1.2.4/Sun Sep 16 14:40:48 2012//TinfoglueUppsala2982repopatch
+/SimplifiedFallbackJNDIBasicAuthorizationModule.java/1.6.2.4/Sun Sep 16 14:40:48 2012//TinfoglueUppsala2982repopatch
+/SimplifiedJNDIBasicAuthorizationModule.java/1.18.2.4/Sun Sep 16 14:40:48 2012//TinfoglueUppsala2982repopatch
+/WebServiceAuthorizationModule.java/1.7.2.4/Sun Sep 16 14:40:48 2012//TinfoglueUppsala2982repopatch
+D/interceptors////

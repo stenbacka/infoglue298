@@ -1,0 +1,32 @@
+/InfoGlueAuthorizationParameters.properties/1.1.1.1/Mon Nov 29 15:24:47 2004//TinfoglueUppsala2982repopatch
+/JNDIParameters.properties/1.2/Sun Jan  1 23:16:14 2006//TinfoglueUppsala2982repopatch
+/LICENSE.HTML/1.1.1.1/Mon Nov 29 15:24:47 2004//TinfoglueUppsala2982repopatch
+/castor.properties/1.3/Mon May 16 16:06:10 2005//TinfoglueUppsala2982repopatch
+D/cms////
+/cms-web.xml/1.35/Sun Sep 16 14:40:42 2012//TinfoglueUppsala2982repopatch
+/cms.properties/1.35.2.1/Sun Sep 16 14:40:42 2012//TinfoglueUppsala2982repopatch
+/commons-logging.properties/1.1.1.1/Mon Nov 29 15:24:46 2004//TinfoglueUppsala2982repopatch
+D/config////
+/context.xml/1.1/Tue Jan 27 21:31:17 2009//TinfoglueUppsala2982repopatch
+D/data////
+/database.xml/1.7.2.1/Sun Sep 16 14:40:42 2012//TinfoglueUppsala2982repopatch
+D/deliver////
+/deliver-web.xml/1.46/Mon Feb 23 19:37:57 2009//TinfoglueUppsala2982repopatch
+/deliver.properties/1.43.2.1/Sun Sep 16 14:40:42 2012//TinfoglueUppsala2982repopatch
+/hibernate.cfg.xml/1.5.2.1/Sun Sep 16 14:40:42 2012//TinfoglueUppsala2982repopatch
+/log4j.dtd/1.1.1.1/Mon Nov 29 15:24:47 2004//TinfoglueUppsala2982repopatch
+/log4j.properties/1.3/Sun Apr  3 08:55:44 2005//TinfoglueUppsala2982repopatch
+/log4j.xml/1.24/Tue Oct 23 14:20:34 2012//TinfoglueUppsala2982repopatch
+/oscache.properties/1.5/Thu Nov 22 16:20:43 2007//TinfoglueUppsala2982repopatch
+/osworkflow.xml/1.6/Fri Nov  9 16:32:14 2007//TinfoglueUppsala2982repopatch
+/propertyset.xml/1.6.2.1/Sun Sep 16 14:40:42 2012//TinfoglueUppsala2982repopatch
+/quartz.properties/1.2/Sun Jun 12 20:55:58 2005//TinfoglueUppsala2982repopatch
+/robots-live.txt/1.1/Tue Nov 13 10:38:07 2007//TinfoglueUppsala2982repopatch
+/server-config.wsdd/1.14.2.1/Sun Sep 16 14:40:42 2012/-kb/TinfoglueUppsala2982repopatch
+D/tld////
+/workflows.xml/1.3/Sun Jan 23 20:37:50 2005//TinfoglueUppsala2982repopatch
+/xml_mapping_content_2.5.xml/1.3/Thu May 14 06:36:01 2009//TinfoglueUppsala2982repopatch
+/xml_mapping_settings.xml/1.2/Sat Sep  3 14:40:17 2005//TinfoglueUppsala2982repopatch
+/xml_mapping_site.xml/1.7/Mon Nov 19 13:38:13 2007//TinfoglueUppsala2982repopatch
+/xml_mapping_site_2.5.xml/1.5/Thu May 14 06:36:01 2009//TinfoglueUppsala2982repopatch
+/xml_mapping_site_3.0.xml/1.1.4.1/Tue Jan 22 11:21:51 2013//TinfoglueUppsala2982repopatch
