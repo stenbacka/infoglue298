@@ -197,13 +197,13 @@ public class OptimizedImportController extends BaseController implements Runnabl
 					String toEncoding = CmsPropertyHandler.getUploadToEncoding();
 					if(toEncoding == null)
 						toEncoding = "utf-8";
-					//TODO: UTF-8 broken?
-					if(replacements.indexOf("å") == -1 && 
-						replacements.indexOf("ä") == -1 && 
-						replacements.indexOf("ö") == -1 && 
-						replacements.indexOf("Å") == -1 && 
-						replacements.indexOf("Ä") == -1 && 
-						replacements.indexOf("Ö") == -1)
+					// Looks for Swedish characters
+					if(replacements.indexOf("\u00E5") == -1 &&
+					   replacements.indexOf("\u00E4") == -1 &&
+					   replacements.indexOf("\u00F6") == -1 &&
+					   replacements.indexOf("\u00C5") == -1 &&
+					   replacements.indexOf("\u00C4") == -1 &&
+					   replacements.indexOf("\u00D6") == -1)
 					{
 						replacements = new String(replacements.getBytes(fromEncoding), toEncoding);
 					}

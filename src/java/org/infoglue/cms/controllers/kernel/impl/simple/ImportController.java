@@ -236,7 +236,9 @@ public class ImportController extends BaseController
 			if(splittedString.length == 3)
 			{
 				String oldRepId = splittedString[1];
-				key = key.replaceAll(oldRepId, (String)repositoryIdMap.get(oldRepId));
+				String replacement = (String)repositoryIdMap.get(oldRepId);
+				if(replacement != null)
+					key = key.replaceAll(oldRepId, replacement);
 				
 				if(value != null && !value.equals("null"))
 				{
@@ -258,7 +260,9 @@ public class ImportController extends BaseController
 			if(splittedString.length == 3)
 			{
 				String oldContentId = splittedString[1];
-				key = key.replaceAll(oldContentId, (String)contentIdMap.get(oldContentId));
+				String replacement = (String)contentIdMap.get(oldContentId);
+				if(replacement != null)
+					key = key.replaceAll(oldContentId, replacement);
 				if(value != null && !value.equals("null"))
 					ps.setString(key, value);
 			}
@@ -274,7 +278,9 @@ public class ImportController extends BaseController
 			if(splittedString.length == 3)
 			{
 				String oldSiteNodeId = splittedString[1];
-				key = key.replaceAll(oldSiteNodeId, (String)siteNodeIdMap.get(oldSiteNodeId));
+				String replacement = (String)siteNodeIdMap.get(oldSiteNodeId);
+				if(replacement != null)
+					key = key.replaceAll(oldSiteNodeId, replacement);
 				if(value != null && !value.equals("null"))
 					ps.setString(key, value);
 			}
@@ -287,7 +293,7 @@ public class ImportController extends BaseController
 			AccessRight accessRight = accessRightsIterator.next();
 
 			InterceptionPoint interceptionPoint = InterceptionPointController.getController().getInterceptionPointWithName(accessRight.getInterceptionPointName(), db);
-			if (interceptionPoint == null)
+			if (interceptionPoint != null)
 			{
 				accessRight.setInterceptionPoint(interceptionPoint);
 				if(interceptionPoint.getName().indexOf("Content") > -1)
