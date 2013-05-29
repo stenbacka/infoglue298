@@ -132,9 +132,12 @@ public class ViewContentAction extends InfoGlueAbstractAction
 	        {
 	            if(this.repositoryId == null)
 	                this.repositoryId = contentVO.getRepositoryId();
-	            
-		        //this.languageId = getMasterLanguageVO().getId();
-		        this.languageId = getInitialLanguageVO().getId();
+
+				//this.languageId = getMasterLanguageVO().getId();
+				if (this.languageId == null)
+				{
+					this.languageId = getInitialLanguageVO().getId();
+				}
 	            return "viewVersion";
 	        }
 	        else
@@ -445,6 +448,11 @@ public class ViewContentAction extends InfoGlueAbstractAction
     {
         return languageId;
     }
+
+	public void setLanguageId(Integer languageId)
+	{
+		this.languageId = languageId;
+	}
     
     public String getStay()
     {

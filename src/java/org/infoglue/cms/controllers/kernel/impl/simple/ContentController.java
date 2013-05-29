@@ -1944,6 +1944,54 @@ public class ContentController extends BaseController
 		return sb.toString();
 	}
 
+	/**
+	 * Gets the given Content's path a comma separated list (e.g. 123,654,999) where the right most
+	 * id is the provided content-id and the the next id, to the left, is its parent and so on up to
+	 * the ancestor of the given content-id that has no parent content.
+	 * @param contentId
+	 * @return
+	 * @throws SystemException
+	 */
+	public String getContentIdsPathAsCommaSeperatedString(Integer contentId) throws SystemException
+	{
+		String contentPath = null;
+		Database db = null;
+
+		try
+		{
+			db = CastorDatabaseService.getDatabase();
+			beginTransaction(db);
+			contentPath = getContentIdsPathAsCommaSeperatedString(contentId, db);
+			commitTransaction(db);
+		}
+		catch(Exception ex)
+		{
+			logger.error("An error occurred when computing the content-id path so we should not complete the transaction. Message: " + ex.getMessage());
+			logger.warn("An error occurred when computing the content-id path so we should not complete the transaction.", ex);
+			rollbackTransaction(db);
+			return null;
+		}
+
+		return contentPath;
+	}
+
+	public String getContentIdsPathAsCommaSeperatedString(Integer contentId, Database db) throws SystemException, Bug
+	{
+		StringBuilder sb = new StringBuilder();
+
+		ContentVO contentVO = ContentController.getContentController().getContentVOWithId(contentId, db);
+
+		sb.insert(0, contentVO.getContentId());
+
+		while (contentVO.getParentContentId() != null)
+		{
+			contentVO = ContentController.getContentController().getContentVOWithId(contentVO.getParentContentId(), db);
+			sb.insert(0, contentVO.getContentId() + ",");
+		}
+
+		return sb.toString();
+	}
+
 	public List<ContentVO> getUpcomingExpiringContents(int numberOfWeeks) throws Exception
 	{
 		List<ContentVO> contentVOList = new ArrayList<ContentVO>();

@@ -74,7 +74,8 @@
 		function loadMenu()
 		{
 			repositoryId = "$!repositoryId";
-		    parent.frames[1].location.href = "${preferedTree}repositoryId=" + repositoryId;
+			var contentParam = #if( "$!contentId" == "" ) "" #else "&contentId=$!contentId" #end;
+		    parent.frames[1].location.href = "${preferedTree}repositoryId=" + repositoryId  + contentParam;
 		    top.document.title = "Content - $!repositoryName - InfoGlue CMS";
 		}
 		
