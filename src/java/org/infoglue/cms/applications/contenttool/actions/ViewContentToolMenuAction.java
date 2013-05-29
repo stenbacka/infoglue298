@@ -24,6 +24,7 @@
 package org.infoglue.cms.applications.contenttool.actions;
 
 import org.infoglue.cms.applications.common.actions.InfoGlueAbstractAction;
+import org.infoglue.cms.controllers.kernel.impl.simple.ContentController;
 
 /**
  * This class implements the action class for the menu in the content tool.
@@ -34,12 +35,14 @@ import org.infoglue.cms.applications.common.actions.InfoGlueAbstractAction;
 public class ViewContentToolMenuAction extends InfoGlueAbstractAction
 {
 	private static final long serialVersionUID = 1L;
-	
-    private Integer repositoryId;
-    private String tree;
-    private String showVersions;
-    private String path;
-    
+
+	private Integer repositoryId;
+	private String tree;
+	private String showVersions;
+	private String path;
+	private Integer contentId;
+
+
     public void setRepositoryId(Integer repositoryId)
     {
     	if (this.showVersions == null || this.showVersions.equals("")) 
@@ -59,12 +62,17 @@ public class ViewContentToolMenuAction extends InfoGlueAbstractAction
     {
     	return this.repositoryId;
     }
-    
-    public String doExecute() throws Exception
-    {
-    	getResponse().setHeader("Cache-Control","no-cache"); 
-    	getResponse().setHeader("Pragma","no-cache");
-    	getResponse().setDateHeader ("Expires", 0);
+
+	public String doExecute() throws Exception
+	{
+		getResponse().setHeader("Cache-Control","no-cache");
+		getResponse().setHeader("Pragma","no-cache");
+		getResponse().setDateHeader ("Expires", 0);
+
+		if (contentId != null)
+		{
+			setPath(ContentController.getContentController().getContentIdsPathAsCommaSeperatedString(contentId));
+		}
 
     	return "success";
     }
@@ -106,5 +114,14 @@ public class ViewContentToolMenuAction extends InfoGlueAbstractAction
 	{
 		this.path = path;
 	}
-	
+
+	public Integer getContentId()
+	{
+		return contentId;
+	}
+
+	public void setContentId(Integer contentId)
+	{
+		this.contentId = contentId;
+	}
 }
