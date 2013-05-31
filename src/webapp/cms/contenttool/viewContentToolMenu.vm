@@ -203,11 +203,11 @@
 			//alert('path: $!path');
 			//alert('exp: $!exp');
 			##if( "$!contentId" == "" )
-			if("$!path" == "")
+			#if("$!path" == "")
 				reloadMain();
-			##else
-			##	syncWithTree("$!path", currentRepositoryId);
-			##end
+			#else
+				##syncWithTree("$!path", currentRepositoryId);
+			#end
 
 			$(window).resize( function() {
      			resize();

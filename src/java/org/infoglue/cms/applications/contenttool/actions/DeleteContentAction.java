@@ -28,11 +28,15 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 import org.infoglue.cms.applications.common.actions.InfoGlueAbstractAction;
+import org.infoglue.cms.applications.databeans.ReferenceBean;
 import org.infoglue.cms.controllers.kernel.impl.simple.ContentController;
 import org.infoglue.cms.controllers.kernel.impl.simple.ContentControllerProxy;
 import org.infoglue.cms.controllers.kernel.impl.simple.InconsistenciesController;
 import org.infoglue.cms.controllers.kernel.impl.simple.RegistryController;
+import org.infoglue.cms.controllers.kernel.impl.simple.SiteNodeController;
+import org.infoglue.cms.controllers.kernel.impl.simple.SiteNodeControllerProxy;
 import org.infoglue.cms.entities.content.ContentVO;
+import org.infoglue.cms.util.CmsPropertyHandler;
 
 /**
  * This action removes a content from the system.
@@ -45,17 +49,17 @@ public class DeleteContentAction extends InfoGlueAbstractAction
     private final static Logger logger = Logger.getLogger(DeleteContentAction.class.getName());
 
 	private static final long serialVersionUID = 1L;
-	
+
 	private ContentVO contentVO;
 	private Integer parentContentId;
 	private Integer changeTypeId;
 	private String[] registryId;
-	
+
 	//Used for the relatedPages control
 	private Integer siteNodeId;
-	
-	private List referenceBeanList = new ArrayList();
-	
+
+	private List<ReferenceBean> referenceBeanList = new ArrayList<ReferenceBean>();
+
 	public DeleteContentAction()
 	{
 		this(new ContentVO());
@@ -65,29 +69,60 @@ public class DeleteContentAction extends InfoGlueAbstractAction
 	{
 		this.contentVO = contentVO;
 	}
-	
-	public String doExecute() throws Exception 
+
+	protected String executeAction(boolean forceDelete) throws Exception
 	{
-		this.referenceBeanList = RegistryController.getController().getReferencingObjectsForContent(this.contentVO.getContentId());
-		if(this.referenceBeanList != null && this.referenceBeanList.size() > 0)
+		if (!forceDelete)
+		{
+//			this.referenceBeanList = RegistryController.getController().getReferencingObjectsForSiteNode(this.siteNodeVO.getSiteNodeId(), CmsPropertyHandler.getOnlyShowReferenceIfLatestVersion());
+			this.referenceBeanList = RegistryController.getController().getReferencingObjectsForContent(this.contentVO.getContentId());
+		}
+		if(!forceDelete && this.referenceBeanList != null && this.referenceBeanList.size() > 0)
 		{
 		    return "showRelations";
 		}
 	    else
 	    {
-	    	try
+			try
 			{
+//				this.parentSiteNodeId = SiteNodeController.getParentSiteNode(this.siteNodeVO.getSiteNodeId()).getSiteNodeId();
 				this.parentContentId = ContentController.getParentContent(this.contentVO.getContentId()).getContentId();
 			}
 			catch(Exception e)
 			{
-				logger.info("The content must have been a root-content because we could not find a parent.");
+				logger.info("The siteNode must have been a root-siteNode because we could not find a parent.");
 			}
 
-	    	ContentControllerProxy.getController().acDelete(this.getInfoGluePrincipal(), this.contentVO);	    
-			
-	    	return "success";
+//			SiteNodeControllerProxy.getSiteNodeControllerProxy().acDelete(this.getInfoGluePrincipal(), this.siteNodeVO, forceDelete);
+			ContentControllerProxy.getController().acDelete(this.getInfoGluePrincipal(), this.contentVO, forceDelete);
+
+			return "success";
 	    }
+	}
+
+	public String doExecute() throws Exception 
+	{
+		return executeAction(false);
+//		this.referenceBeanList = RegistryController.getController().getReferencingObjectsForContent(this.contentVO.getContentId());
+//		if(this.referenceBeanList != null && this.referenceBeanList.size() > 0)
+//		{
+//		    return "showRelations";
+//		}
+//	    else
+//	    {
+//	    	try
+//			{
+//				this.parentContentId = ContentController.getParentContent(this.contentVO.getContentId()).getContentId();
+//			}
+//			catch(Exception e)
+//			{
+//				logger.info("The content must have been a root-content because we could not find a parent.");
+//			}
+//
+//	    	ContentControllerProxy.getController().acDelete(this.getInfoGluePrincipal(), this.contentVO);	    
+//			
+//	    	return "success";
+//	    }
 	}	
 	
 	public String doStandalone() throws Exception 
@@ -108,7 +143,7 @@ public class DeleteContentAction extends InfoGlueAbstractAction
 			    logger.info("The content must have been a root-content because we could not find a parent.");
 			}
 
-	    	ContentControllerProxy.getController().acDelete(this.getInfoGluePrincipal(), this.contentVO);	    
+	    	ContentControllerProxy.getController().acDelete(this.getInfoGluePrincipal(), this.contentVO, false);
 			
 	    	return "successStandalone";
 	    }
@@ -116,30 +151,16 @@ public class DeleteContentAction extends InfoGlueAbstractAction
 
 	public String doDeleteReference() throws Exception 
 	{
-	    for(int i=0; i<registryId.length; i++)
-	    {
-	    	try
-	    	{
-	    		InconsistenciesController.getController().removeReferences(new Integer(registryId[i]), this.getInfoGluePrincipal());
-	    	}
-	    	catch(Exception e)
-	    	{
-	    		logger.error("An error occurred when we tried to delete references: " + e.getMessage());
-	    	}
-	    	
-	    	try
-	    	{
-	    		RegistryController.getController().delete(new Integer(registryId[i]));
-	    	}
-	    	catch(Exception e)
-	    	{
-	    		logger.error("An error occurred when we tried to delete references: " + e.getMessage());
-	    	}
-	    }
-	    
-	    return doExecute();
-	}	
-	
+		RegistryController.getController().delete(registryId, this.getInfoGluePrincipal(), true);
+
+	    return executeAction(false);
+	}
+
+	public String doDeleteAllReferences() throws Exception
+	{
+		return executeAction(true);
+	}
+
 	public String doFixPage() throws Exception 
 	{
 	    return "fixPage";
@@ -148,6 +169,11 @@ public class DeleteContentAction extends InfoGlueAbstractAction
 	public String doFixPageHeader() throws Exception 
 	{
 	    return "fixPageHeader";
+	}
+
+	public boolean getOnlyShowLatestReferenceIfLatestVersion()
+	{
+		return CmsPropertyHandler.getOnlyShowReferenceIfLatestVersion();
 	}
 
 	public void setContentId(Integer contentId)
@@ -195,7 +221,7 @@ public class DeleteContentAction extends InfoGlueAbstractAction
 		return "ViewContent.action?contentId=" + this.contentVO.getId() + "&repositoryId=" + this.contentVO.getRepositoryId();
 	}
 
-    public List getReferenceBeanList()
+    public List<ReferenceBean> getReferenceBeanList()
     {
         return referenceBeanList;
     }

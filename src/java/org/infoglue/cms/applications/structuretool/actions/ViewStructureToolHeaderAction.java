@@ -27,9 +27,14 @@ import java.util.List;
 
 import javax.servlet.http.Cookie;
 
+import org.apache.log4j.Logger;
 import org.infoglue.cms.applications.common.actions.InfoGlueAbstractAction;
+import org.infoglue.cms.controllers.kernel.impl.simple.ContentController;
 import org.infoglue.cms.controllers.kernel.impl.simple.RepositoryController;
+import org.infoglue.cms.controllers.kernel.impl.simple.SiteNodeController;
+import org.infoglue.cms.entities.content.ContentVO;
 import org.infoglue.cms.entities.management.RepositoryVO;
+import org.infoglue.cms.entities.structure.SiteNodeVO;
 import org.infoglue.cms.util.CmsPropertyHandler;
 
 
@@ -41,11 +46,13 @@ import org.infoglue.cms.util.CmsPropertyHandler;
 
 public class ViewStructureToolHeaderAction extends InfoGlueAbstractAction
 {
-	private static final long serialVersionUID = 1L;   
+	private static final long serialVersionUID = 1L;
+	private static final Logger logger = Logger.getLogger(ViewStructureToolHeaderAction.class);
      
 	private List repositories;
 	private String tree;
 	private Integer repositoryId;
+	private Integer siteNodeId;
     
     private String exp=""; // for html tree support to start expanded
 
@@ -78,7 +85,20 @@ public class ViewStructureToolHeaderAction extends InfoGlueAbstractAction
 			setTree("applet");
     	
     	this.repositories = RepositoryController.getController().getAuthorizedRepositoryVOList(this.getInfoGluePrincipal(), false);
-    	
+
+    	if (siteNodeId != null)
+		{
+			try
+			{
+				SiteNodeVO siteNodeVO = SiteNodeController.getController().getSiteNodeVOWithId(siteNodeId);
+				this.repositoryId = siteNodeVO.getRepositoryId();
+			}
+			catch (Exception ex)
+			{
+				logger.warn("Error when trying to find SiteNode for repository selection for repository dropdown. SiteNode-id: " + siteNodeId + ". Message: " + ex.getMessage());
+			}
+		}
+
         return "success";
     }
     
@@ -195,4 +215,15 @@ public class ViewStructureToolHeaderAction extends InfoGlueAbstractAction
 	{
 		this.exp = exp;
 	}
+
+	public Integer getSiteNodeId()
+	{
+		return siteNodeId;
+	}
+
+	public void setSiteNodeId(Integer siteNodeId)
+	{
+		this.siteNodeId = siteNodeId;
+	}
+
 }
