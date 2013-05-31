@@ -56,7 +56,8 @@
 		function loadMenu()
 		{
 			repositoryId = "$repositoryId";
-		    parent.frames[1].location.href = "${preferedTree}repositoryId=" + repositoryId;
+			var siteNodeParam = #if( "$!siteNodeId" == "" ) "" #else "&siteNodeId=$!siteNodeId" #end;
+		    parent.frames[1].location.href = "${preferedTree}repositoryId=" + repositoryId + siteNodeParam;
 		    top.document.title = "Structure - $!repositoryName - InfoGlue CMS";
 		}
 

@@ -293,18 +293,23 @@ public class ContentControllerProxy extends ContentController
 		return update(contentVO, contentTypeDefinitionId);
 	}   
 	
+	public void acDelete(InfoGluePrincipal infogluePrincipal, ContentVO contentVO) throws ConstraintException, SystemException, Bug, Exception
+	{
+		acDelete(infogluePrincipal, contentVO, false);
+	}
+
 	/**
 	 * This method deletes a content after first checking that the user has rights to edit it.
 	 */
 
-	public void acDelete(InfoGluePrincipal infogluePrincipal, ContentVO contentVO) throws ConstraintException, SystemException, Bug, Exception
+	public void acDelete(InfoGluePrincipal infogluePrincipal, ContentVO contentVO, boolean forceDelete) throws ConstraintException, SystemException, Bug, Exception
 	{
 		Map hashMap = new HashMap();
 		hashMap.put("contentId", contentVO.getId());
     	
 		intercept(hashMap, "Content.Delete", infogluePrincipal);
 
-	    delete(contentVO, infogluePrincipal);
+	    delete(contentVO, infogluePrincipal, forceDelete);
 	}   
 	
 	

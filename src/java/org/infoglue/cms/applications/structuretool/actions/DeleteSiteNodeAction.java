@@ -56,10 +56,9 @@ public class DeleteSiteNodeAction extends InfoGlueAbstractAction
 
 	//Used for the relatedPages control
 	private Integer contentId;
-	
+
 	private List<ReferenceBean> referenceBeanList = new ArrayList<ReferenceBean>();
 
-	
 	public DeleteSiteNodeAction()
 	{
 		this(new SiteNodeVO());
@@ -74,7 +73,7 @@ public class DeleteSiteNodeAction extends InfoGlueAbstractAction
 	{
 		if (!forceDelete)
 		{
-			this.referenceBeanList = RegistryController.getController().getReferencingObjectsForSiteNode(this.siteNodeVO.getSiteNodeId(), CmsPropertyHandler.getOnlyShowReferenceIfLatestVersion());
+			this.referenceBeanList = RegistryController.getController().getReferencingObjectsForSiteNode(this.siteNodeVO.getSiteNodeId());
 		}
 		if(!forceDelete && this.referenceBeanList != null && this.referenceBeanList.size() > 0)
 		{
@@ -91,7 +90,6 @@ public class DeleteSiteNodeAction extends InfoGlueAbstractAction
 				logger.info("The siteNode must have been a root-siteNode because we could not find a parent.");
 			}
 
-//			SiteNodeControllerProxy.getSiteNodeControllerProxy().acMarkForDelete(this.getInfoGluePrincipal(), this.siteNodeVO, forceDelete);
 			SiteNodeControllerProxy.getSiteNodeControllerProxy().acDelete(this.getInfoGluePrincipal(), this.siteNodeVO, forceDelete);
 
 			return "success";
@@ -105,7 +103,7 @@ public class DeleteSiteNodeAction extends InfoGlueAbstractAction
 
 	public String doDeleteReference() throws Exception 
 	{
-		RegistryController.getController().delete(registryId, this.getInfoGluePrincipal(), true, getOnlyShowLatestReferenceIfLatestVersion());
+		RegistryController.getController().delete(registryId, this.getInfoGluePrincipal(), true);
 
 	    return executeAction(false);
 	}

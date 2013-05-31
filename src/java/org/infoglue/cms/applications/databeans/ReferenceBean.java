@@ -23,7 +23,9 @@
 package org.infoglue.cms.applications.databeans;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * This bean is really just to give the reference-screens a nice datastructure.
@@ -33,24 +35,25 @@ import java.util.List;
 
 public class ReferenceBean
 {
-    private String name;
-    private String path;
-    private String contactPersonEmail;
-    //private List registryVOList;
-    private Object referencingCompletingObject;
-    private List<ReferenceVersionBean> versions = new ArrayList<ReferenceVersionBean>();
-    
-    public String getName()
-    {
-        return name;
-    }
-    
-    public void setName(String name)
-    {
-        this.name = name;
-    }
-    
-    public String getPath()
+	private String name;
+	private String path;
+	private String contactPersonEmail;
+	private String contactPersonUsername;
+	private Set<String> concernedPeople = new HashSet<String>();
+	private Object referencingCompletingObject;
+	private List<ReferenceVersionBean> versions = new ArrayList<ReferenceVersionBean>();
+
+	public String getName()
+	{
+		return name;
+	}
+
+	public void setName(String name)
+	{
+		this.name = name;
+	}
+
+	public String getPath()
 	{
 		return path;
 	}
@@ -60,39 +63,47 @@ public class ReferenceBean
 		this.path = path;
 	}
 
-    public Object getReferencingCompletingObject()
-    {
-        return referencingCompletingObject;
-    }
-    
-    public void setReferencingCompletingObject(Object referencingCompletingObject)
-    {
-        this.referencingCompletingObject = referencingCompletingObject;
-    }
-    
-    /*
-    public List getRegistryVOList()
-    {
-        return registryVOList;
-    }
-    
-    public void setRegistryVOList(List registryVOList)
-    {
-        this.registryVOList = registryVOList;
-    }
-    */
-    public List<ReferenceVersionBean> getVersions()
-    {
-        return versions;
-    }
+	public Object getReferencingCompletingObject()
+	{
+	    return referencingCompletingObject;
+	}
+
+	public void setReferencingCompletingObject(Object referencingCompletingObject)
+	{
+	    this.referencingCompletingObject = referencingCompletingObject;
+	}
+
+	public List<ReferenceVersionBean> getVersions()
+	{
+	    return versions;
+	}
 
 	public String getContactPersonEmail()
 	{
+		if (contactPersonEmail == null)
+		{
+			return getContactPersonUsername();
+		}
 		return contactPersonEmail;
 	}
 
 	public void setContactPersonEmail(String contactPersonEmail)
 	{
 		this.contactPersonEmail = contactPersonEmail;
+	}
+
+	public String getContactPersonUsername()
+	{
+		return contactPersonUsername;
+	}
+
+	public void setContactPersonUsername(String contactPersonUsername)
+	{
+		this.contactPersonUsername = contactPersonUsername;
+	}
+
+	public Set<String> getConcernedPeople()
+	{
+		return concernedPeople;
 	}
 }

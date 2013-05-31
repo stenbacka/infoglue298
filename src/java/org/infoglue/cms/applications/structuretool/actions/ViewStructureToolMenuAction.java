@@ -24,7 +24,9 @@
 package org.infoglue.cms.applications.structuretool.actions;
 
 import org.infoglue.cms.applications.common.actions.InfoGlueAbstractAction;
+import org.infoglue.cms.controllers.kernel.impl.simple.ContentController;
 import org.infoglue.cms.controllers.kernel.impl.simple.LanguageController;
+import org.infoglue.cms.controllers.kernel.impl.simple.SiteNodeController;
 import org.infoglue.cms.entities.management.LanguageVO;
 import org.infoglue.cms.util.CmsPropertyHandler;
 
@@ -41,6 +43,7 @@ public class ViewStructureToolMenuAction extends InfoGlueAbstractAction
     private Integer repositoryId;
     private String tree;
     private String path;
+    private Integer siteNodeId;
     
     public void setRepositoryId(Integer repositoryId)
     {
@@ -59,6 +62,11 @@ public class ViewStructureToolMenuAction extends InfoGlueAbstractAction
     
     public String doExecute() throws Exception
     {
+		if (siteNodeId != null)
+		{
+			setPath(SiteNodeController.getController().getSiteNodeIdsAsCommaSeperatedString(siteNodeId));
+		}
+
         return "success";
     }
                
@@ -98,5 +106,15 @@ public class ViewStructureToolMenuAction extends InfoGlueAbstractAction
 	public void setPath(String path)
 	{
 		this.path = path;
+	}
+
+	public Integer getSiteNodeId()
+	{
+		return siteNodeId;
+	}
+
+	public void setSiteNodeId(Integer siteNodeId)
+	{
+		this.siteNodeId = siteNodeId;
 	}
 }

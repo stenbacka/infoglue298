@@ -105,7 +105,21 @@
 	    {
 	    	document.getElementById('treeDiv').style.left = '2px';
 	    	document.getElementById('treeDiv').style.right = '2px';
+			setTimeout("expandTreeAfterLoaded();", 500);
 	    }
+
+		function expandTreeAfterLoaded()
+		{
+			console.log("I happen! Path: $path");
+			//alert("Loaded: $path")
+			#if($path != "")
+				#if($tree == "applet")
+					alert('Not implemented in this tree');
+				#else
+					frames['itreeFrame'].syncWithTree("$path");
+				#end
+			#end
+		}
 
 	    function notifyExp(v)
 	    {
@@ -205,8 +219,8 @@
 			//alert('exp: $!exp');
 			if("$!path" == "")
 				reloadMain();
-			else
-				syncWithTree("$!path", currentRepositoryId);
+			##else
+			##	syncWithTree("$!path", currentRepositoryId);
 				
 			$(window).resize( function() {
      			resize();

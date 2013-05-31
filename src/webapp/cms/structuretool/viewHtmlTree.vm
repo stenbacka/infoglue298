@@ -159,8 +159,11 @@
 				selectWhenLoaded(node, id);
 				return;
 			}
-			
-			var node = tree.getNodeWithMyId(pathArr[level]);
+
+			if (typeof tree !== undefined)
+			{
+				var node = tree.getNodeWithMyId(pathArr[level]);
+			}
 
 			if(!node.loading) node.expand();
 			if(node.loading) 

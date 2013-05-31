@@ -35,9 +35,31 @@ public class ViewStructureToolAction extends ViewCMSAbstractToolAction
 { 
 	private static final long serialVersionUID = 1L;
 
-    public String doExecute() throws Exception
+	private Integer siteNodeId;
+	private Integer languageId;
+
+	public String doExecute() throws Exception
     {
         return "success";
-    }
-               
+	}
+
+	public Integer getSiteNodeId()
+	{
+		return siteNodeId;
+	}
+
+	public void setSiteNodeId(Integer siteNodeId)
+	{
+		this.siteNodeId = siteNodeId;
+	}
+
+	public Integer getLanguageId()
+	{
+		return languageId;
+	}
+
+	public void setLanguageId(Integer languageId)
+	{
+		this.languageId = languageId;
+	}
 }
