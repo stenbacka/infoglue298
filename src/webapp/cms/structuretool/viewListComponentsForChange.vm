@@ -6,30 +6,95 @@
 <head>
 	<title>$ui.getString("tool.structuretool.chooseComponentToAddTitle")</title>
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-	
+
+	<script type="text/javascript" src="script/jquery/jquery-1.2.6.min.js"></script>
 	<script type="text/javascript" language="JavaScript">
-	<!-- 
-	    function changeComponent(componentId)
-	    {
-	    	//alert("siteNodeId: $siteNodeId");
-	    	//alert("languageId: $languageId");
-	    	//alert("parentComponentId: $!parentComponentId");
-	    	//alert("contentId: $!contentId");
-	    	//alert("$slotId: $slotId");
-	    	//alert("componentId:" + componentId);
-	    	var regardAsCompatible = document.getElementById("regardAsCompatible").checked;
-	    	var recurseChildPages = document.getElementById("recurseChildPages").checked;
-	    	url = "ViewSiteNodePageComponents!changeComponent.action?siteNodeId=$siteNodeId&languageId=$languageId&contentId=$contentId&componentId=$!componentId&newComponentContentId=" + componentId + "&slotId=$slotId&specifyBaseTemplate=$!specifyBaseTemplate&showSimple=$showSimple&regardAsCompatible=" + regardAsCompatible + "&recurseChildPages=" + recurseChildPages;
-	    	self.opener.location.href = url;
-		    window.close();
-	    }
-	
+	//
+		function changeComponent(componentId)
+		{
+			//alert("siteNodeId: $siteNodeId");
+			//alert("languageId: $languageId");
+			//alert("parentComponentId: $!parentComponentId");
+			//alert("contentId: $!contentId");
+			//alert("$slotId: $slotId");
+			//alert("componentId:" + componentId);
+
+			var changeMethod = $("input:radio[name=changeMethod]:checked").val();
+			if (typeof changeMethod === 'undefined')
+			{
+				alert("$ui.getString("tool.structuretool.changeComponentError.missingChangeMethod")");
+			}
+			else
+			{
+				var regardAsCompatible = document.getElementById("regardAsCompatible").checked;
+				var recurseChildPages = document.getElementById("recurseChildPages").checked;
+				var recursionMethod = recurseChildPages === true ? "thisAndSubpages" : "onlyThisPage";
+				url = "ViewSiteNodePageComponents!changeComponent.action?siteNodeId=$siteNodeId&languageId=$languageId&contentId=$contentId&componentId=$!componentId&newComponentContentId=" + componentId + "&slotId=$slotId&specifyBaseTemplate=$!specifyBaseTemplate&showSimple=$showSimple&regardAsCompatible=" + regardAsCompatible + "&recursionMethod=" + recursionMethod + "&changeMethod=" + changeMethod;
+
+				var confirmMessage;
+				if (changeMethod == "$changeMethods.matchId")
+				{
+					if (recursionMethod == "onlyThisPage")
+					{
+						confirmMessage = "$ui.getString("tool.structuretool.changeComponentError.message_componentId_onlyThisPage")";
+					}
+					else if (recursionMethod == "thisAndSubpages")
+					{
+						confirmMessage = "$ui.getString("tool.structuretool.changeComponentError.message_componentId_thisAndSubpages", $slotId)";
+					}
+					else if (recursionMethod == "theEntireRepository")
+					{
+						confirmMessage = "$ui.getString("tool.structuretool.changeComponentError.message_componentId_theEntireRepository", $slotId)";
+					}
+				}
+				else if (changeMethod == "$changeMethods.matchContentid")
+				{
+					if (recursionMethod == "onlyThisPage")
+					{
+						confirmMessage = "$ui.getString("tool.structuretool.changeComponentError.message_componentContentId_onlyThisPage")";
+					}
+					else if (recursionMethod == "thisAndSubpages")
+					{
+						confirmMessage = "$ui.getString("tool.structuretool.changeComponentError.message_componentContentId_thisAndSubpages")";
+					}
+					else if (recursionMethod == "theEntireRepository")
+					{
+						confirmMessage = "$ui.getString("tool.structuretool.changeComponentError.message_componentContentId_theEntireRepository")";
+					}
+				}
+				else if (changeMethod == "$changeMethods.matchSlotname")
+				{
+					if (recursionMethod == "onlyThisPage")
+					{
+						confirmMessage = "$ui.getString("tool.structuretool.changeComponentError.message_slotName_onlyThisPage", $slotId)";
+					}
+					else if (recursionMethod == "thisAndSubpages")
+					{
+						confirmMessage = "$ui.getString("tool.structuretool.changeComponentError.message_slotName_thisAndSubpages", $slotId)";
+					}
+					else if (recursionMethod == "theEntireRepository")
+					{
+						confirmMessage = "$ui.getString("tool.structuretool.changeComponentError.message_slotName_theEntireRepository", $slotId)";
+					}
+				}
+
+				if(confirmMessage && confirm(confirmMessage))
+				{
+					self.opener.location.href = url;
+					window.close();
+				}
+			}
+		}
+
 		function changeRepository(selectBox)
 		{
 			var repositoryId = selectBox.value;
-	    	var regardAsCompatible = document.getElementById("regardAsCompatible").checked;
-	    	var recurseChildPages = document.getElementById("recurseChildPages").checked;
-			var url = "ViewSiteNodePageComponents!listComponentsForChange.action?siteNodeId=$siteNodeId&languageId=$languageId&contentId=$contentId&parentComponentId=$!parentComponentId&slotId=$slotId&componentId=$!componentId&specifyBaseTemplate=$!specifyBaseTemplate&showSimple=$showSimple&$allowedComponentNamesAsUrlEncodedString&$disallowedComponentNamesAsUrlEncodedString&$allowedComponentGroupNamesAsUrlEncodedString&filterRepositoryId=" + repositoryId + "&regardAsCompatible=" + regardAsCompatible + "&recurseChildPages=" + recurseChildPages;
+			var regardAsCompatible = document.getElementById("regardAsCompatible").checked;
+			var changeMethod = $("input:radio[name=changeMethod]:checked").val();
+			changeMethod = changeMethod || '';
+			var recurseChildPages = document.getElementById("recurseChildPages").checked;
+			var recursionMethod = recurseChildPages === true ? "thisAndSubpages" : "onlyThisPage";
+			var url = "ViewSiteNodePageComponents!listComponentsForChange.action?siteNodeId=$siteNodeId&languageId=$languageId&contentId=$contentId&parentComponentId=$!parentComponentId&slotId=$slotId&componentId=$!componentId&specifyBaseTemplate=$!specifyBaseTemplate&showSimple=$showSimple&$allowedComponentNamesAsUrlEncodedString&$disallowedComponentNamesAsUrlEncodedString&$allowedComponentGroupNamesAsUrlEncodedString&filterRepositoryId=" + repositoryId + "&regardAsCompatible=" + regardAsCompatible + "&recursionMethod=" + recursionMethod + "&changeMethod=" + changeMethod;
 			//alert("url:" + url);
 			document.location.href = url;
 		}
@@ -42,11 +107,15 @@
 			else
 				div.style.display = 'none';
 		}
-	-->
+	//-->
 	</script>
-	
+
 	<link rel="stylesheet" type="text/css" href="css/cms.css" /> 
-	<link rel="stylesheet" type="text/css" href="css/componentEditor.css" /> 
+	<link rel="stylesheet" type="text/css" href="css/componentEditor.css" />
+
+	<style type="text/css">
+		.subheader {font-weight:bold;}
+	</style>
 </head>
 
 <body class="structuretooledit">
@@ -56,7 +125,6 @@
 <table class="structuretooledit" cellpadding="0" cellspacing="0" border="0" width="100%" height="100%">
 <tr>
 	<td valign="top">
-		
 		<table cellpadding="0" cellspacing="0" border="0" width="100%">
 		<tr>
 			<td colspan="5"><img src="images/trans.gif" height="10"></td>
@@ -65,13 +133,80 @@
 			<td colspan="5" class="smalllabel">$ui.getString("tool.structuretool.clickComponentToAddLabel")</td>
 		</tr>
 		<tr>
-			<td colspan="5" height="1" bgcolor="#FEF8D0"><img src="images/trans.gif" width="1" height="1"></td>
+			<td height="5"><img src="images/trans.gif" width="1" height="5"></td>
 		</tr>
 		<tr>
-			<td colspan="5" height="1" bgcolor="#F0E1B4"><img src="images/trans.gif" width="1" height="1"></td>
+			<td style="text-align:center;">
+				<input type="checkbox" name="regardAsCompatible" id="regardAsCompatible" value="true"  #if($regardAsCompatible)checked="checked"#end/>
+			</td>
+			<td colspan="4">
+				<label for="regardAsCompatible">$ui.getString("tool.structuretool.changeComponentMethod.regardAsCompatible")</label>
+			</td>
+		</tr>
+		#if( $hasChangeComponentRecursivelyAccess )
+		<tr>
+			<td style="text-align:center;">
+				<input type="checkbox" name="recurseChildPages" id="recurseChildPages" value="true" #if( $recurseChildPages || "$!recursionMethod" == "thisAndSubpages" )checked="checked"#end/>
+			</td>
+			<td colspan="4">
+				<label for="recurseChildPages">$ui.getString("tool.structuretool.changeComponentMethod.recurseChildPages")</label>
+			</td>
+		</tr>
+		#end
+		<tr>
+			<td height="10"><img src="images/trans.gif" width="1" height="10"></td>
 		</tr>
 		<tr>
-			<td colspan="5" height="1"><img src="images/trans.gif" width="1" height="15"></td>
+			<td colspan="5">
+				<span class="subheader">$ui.getString("tool.structuretool.changeComponentMethod.label")</span>
+			</td>
+		</tr>
+		<tr>
+			<td height="5"><img src="images/trans.gif" width="1" height="5"></td>
+		</tr>
+		<tr>
+			<td style="text-align:center;">
+				<input type="radio" name="changeMethod" id="matchComponentId" value="$changeMethods.matchId" #if( "$!changeMethod" == "$changeMethods.matchId" ) checked="checked" #end/>
+			</td>
+			<td colspan="4">
+				<label for="matchComponentId">
+					$ui.getString("tool.structuretool.changeComponentMethod.matchComponentId.label", $componentName)<br/>
+					#if( $hasChangeComponentRecursivelyAccess )
+						$ui.getString("tool.structuretool.changeComponentMethod.matchComponentId.recursionSupplement")
+					#end
+				</label>
+			</td>
+		</tr>
+		<tr>
+			<td height="3"><img src="images/trans.gif" width="1" height="3"></td>
+		</tr>
+		<tr>
+			<td style="text-align:center;">
+				<input type="radio" name="changeMethod" id="matchComponentContentId" value="$changeMethods.matchContentid" #if( "$!changeMethod" == "$changeMethods.matchContentid" ) checked="checked" #end/>
+			</td>
+			<td colspan="4">
+				<label for="matchComponentContentId">
+					$ui.getString("tool.structuretool.changeComponentMethod.matchContentId.label", $componentName)
+				</label>
+			</td>
+		</tr>
+		#if( $hasChangeComponentRecursivelyAccess )
+		<tr>
+			<td height="3"><img src="images/trans.gif" width="1" height="3"></td>
+		</tr>
+		<tr>
+			<td style="text-align:center;">
+				<input type="radio" name="changeMethod" id="matchSlotname" value="$changeMethods.matchSlotname" #if( "$!changeMethod" == "$changeMethods.matchSlotname" ) checked="checked" #end/>
+			</td>
+			<td colspan="4">
+				<label for="matchSlotname">
+					$ui.getString("tool.structuretool.changeComponentMethod.matchSlotname.label", $slotId)
+				</label>
+			</td>
+		</tr>
+		#end
+		<tr>
+			<td height="10"><img src="images/trans.gif" width="1" height="10"></td>
 		</tr>
 		<tr>
 			<td colspan="5">$ui.getString("tool.structuretool.addComponentChangeRepositoryLabel")<br/>
@@ -85,16 +220,7 @@
 		</tr>
 		<tr>
 			<td height="5"><img src="images/trans.gif" width="1" height="5"></td>
-		</tr>	
-		<tr>
-			<td colspan="5">
-				Keep other components and properties intact <input type="checkbox" name="regardAsCompatible" id="regardAsCompatible" value="true"  #if($regardAsCompatible)checked="checked"#end/><br/>
-				Recurse all pages below this <input type="checkbox" name="recurseChildPages" id="recurseChildPages" value="true" #if($recurseChildPages)checked="checked"#end/><br/>
-			</td>
-		</tr>	
-		<tr>
-			<td height="5"><img src="images/trans.gif" width="1" height="5"></td>
-		</tr>	
+		</tr>
 		<tr style="background-color:#F0E1B4; height:20px;">
 			<td height="1" width="50">&nbsp;</td>
 			<td height="1">

@@ -1,4 +1,6 @@
 *.class
+build/
+bin/
 
 # Package Files #
 *.war
