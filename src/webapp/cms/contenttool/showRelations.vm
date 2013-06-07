@@ -86,7 +86,7 @@
 				#set( $editUrl = "ViewContentVersion!standalone.action?contentId=$referenceBean.referencingCompletingObject.contentId&languageId=$version.referencingObject.languageId" )
 				<tr $class>
 					<td><img src="images/tree/contentRoot.gif"></td>
-					<td colspan="3" width="100%"><a href="$editUrl" target="_blank">$referenceBean.path</a> ($version.referencingObject.languageName) ($!referenceBean.contactPersonEmail)</td>
+					<td colspan="3" width="100%"><a href="$editUrl" target="_blank">$referenceBean.path</a> ($version.referencingObject.languageName) ($!version.contactPersonEmail)</td>
 					<td nowrap="1"><!--<a href="#"><img src="images/delete.gif" border="0"></a><img src="images/trans.gif" border="0" width="5" height="5">--></td>
 					<td nowrap="1"><a href="$editUrl" target="_blank"><img src="images/edit.gif" border="0"></a><img src="images/trans.gif" border="0" width="5" height="5"></td>
 					<td nowrap="1"><a href="DeleteContent!deleteReference.action?contentId=$originalContentId#foreach($version in $referenceBean.versions)#foreach($registryVO in $version.registryVOList)&registryId=$registryVO.id#end#end"><img src="images/ok_icon.gif" border="0"></a><img src="images/trans.gif" border="0" width="5" height="5"></td>

@@ -74,7 +74,6 @@ public class DeleteContentAction extends InfoGlueAbstractAction
 	{
 		if (!forceDelete)
 		{
-//			this.referenceBeanList = RegistryController.getController().getReferencingObjectsForSiteNode(this.siteNodeVO.getSiteNodeId(), CmsPropertyHandler.getOnlyShowReferenceIfLatestVersion());
 			this.referenceBeanList = RegistryController.getController().getReferencingObjectsForContent(this.contentVO.getContentId());
 		}
 		if(!forceDelete && this.referenceBeanList != null && this.referenceBeanList.size() > 0)
@@ -85,7 +84,6 @@ public class DeleteContentAction extends InfoGlueAbstractAction
 	    {
 			try
 			{
-//				this.parentSiteNodeId = SiteNodeController.getParentSiteNode(this.siteNodeVO.getSiteNodeId()).getSiteNodeId();
 				this.parentContentId = ContentController.getParentContent(this.contentVO.getContentId()).getContentId();
 			}
 			catch(Exception e)
@@ -93,7 +91,6 @@ public class DeleteContentAction extends InfoGlueAbstractAction
 				logger.info("The siteNode must have been a root-siteNode because we could not find a parent.");
 			}
 
-//			SiteNodeControllerProxy.getSiteNodeControllerProxy().acDelete(this.getInfoGluePrincipal(), this.siteNodeVO, forceDelete);
 			ContentControllerProxy.getController().acDelete(this.getInfoGluePrincipal(), this.contentVO, forceDelete);
 
 			return "success";
@@ -103,28 +100,8 @@ public class DeleteContentAction extends InfoGlueAbstractAction
 	public String doExecute() throws Exception 
 	{
 		return executeAction(false);
-//		this.referenceBeanList = RegistryController.getController().getReferencingObjectsForContent(this.contentVO.getContentId());
-//		if(this.referenceBeanList != null && this.referenceBeanList.size() > 0)
-//		{
-//		    return "showRelations";
-//		}
-//	    else
-//	    {
-//	    	try
-//			{
-//				this.parentContentId = ContentController.getParentContent(this.contentVO.getContentId()).getContentId();
-//			}
-//			catch(Exception e)
-//			{
-//				logger.info("The content must have been a root-content because we could not find a parent.");
-//			}
-//
-//	    	ContentControllerProxy.getController().acDelete(this.getInfoGluePrincipal(), this.contentVO);	    
-//			
-//	    	return "success";
-//	    }
-	}	
-	
+	}
+
 	public String doStandalone() throws Exception 
 	{
 		this.referenceBeanList = RegistryController.getController().getReferencingObjectsForContent(this.contentVO.getContentId());

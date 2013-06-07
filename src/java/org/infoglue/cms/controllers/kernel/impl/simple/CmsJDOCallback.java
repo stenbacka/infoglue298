@@ -74,6 +74,7 @@ import org.infoglue.cms.entities.structure.impl.simple.SiteNodeVersionImpl;
 import org.infoglue.cms.entities.structure.impl.simple.SmallSiteNodeVersionImpl;
 import org.infoglue.cms.entities.workflow.impl.simple.WorkflowDefinitionImpl;
 import org.infoglue.cms.exception.Bug;
+import org.infoglue.cms.exception.SystemException;
 import org.infoglue.cms.security.InfoGluePrincipal;
 import org.infoglue.cms.util.ChangeNotificationController;
 import org.infoglue.cms.util.NotificationMessage;
@@ -125,6 +126,7 @@ public class CmsJDOCallback implements CallbackInterceptor
     public void storing(Object object, boolean modified) throws Exception
     {
 		//System.out.println("storing...:" + object + ":" + modified);
+		//Thread.dumpStack();
         // ( (Persistent) object ).jdoStore( modified );
    		
    		//logger.info("Should we store -------------->" + object + ":" + modified);
@@ -469,7 +471,8 @@ public class CmsJDOCallback implements CallbackInterceptor
 
     public void removed( Object object ) throws Exception
     {
-		//System.out.println("removed...:" + object);
+//		System.out.println("removed...:" + object);
+		//Thread.dumpStack();
         // ( (Persistent) object ).jdoAfterRemove();
         
        	if (TransactionHistoryImpl.class.getName().indexOf(object.getClass().getName()) == -1 && 
@@ -527,8 +530,8 @@ public class CmsJDOCallback implements CallbackInterceptor
 				clearCache(SmallishContentImpl.class);
 				clearCache(MediumContentImpl.class);
 
-				RegistryController.getController().clearRegistryForReferencedEntity(Content.class.getName(), getObjectIdentity(object).toString());
-				RegistryController.getController().clearRegistryForReferencingEntityCompletingName(Content.class.getName(), getObjectIdentity(object).toString());
+				clearRegistryForReferencedEntity(object);
+				clearRegistryForReferencingEntityCompletingName(object);
 			}
 			else if(object.getClass().getName().equals(ContentVersionImpl.class.getName()))
 			{
@@ -611,6 +614,35 @@ public class CmsJDOCallback implements CallbackInterceptor
 
        	}
     }
+
+
+	private void clearRegistryForReferencedEntity(Object object) throws SystemException, Exception, Bug
+	{
+		Database db = CastorDatabaseService.getThreadDatabase();
+
+		if (db == null)
+		{
+			RegistryController.getController().clearRegistryForReferencedEntity(Content.class.getName(), getObjectIdentity(object).toString());
+		}
+		else
+		{
+			RegistryController.getController().clearRegistryForReferencedEntity(Content.class.getName(), getObjectIdentity(object).toString(), db);
+		}
+	}
+
+	private void clearRegistryForReferencingEntityCompletingName(Object object) throws SystemException, Exception, Bug
+	{
+		Database db = CastorDatabaseService.getThreadDatabase();
+
+		if (db == null)
+		{
+			RegistryController.getController().clearRegistryForReferencingEntityCompletingName(Content.class.getName(), getObjectIdentity(object).toString());
+		}
+		else
+		{
+			RegistryController.getController().clearRegistryForReferencingEntityCompletingName(Content.class.getName(), getObjectIdentity(object).toString(), db);
+		}
+	}
 
 
     public void releasing(Object object, boolean committed)
