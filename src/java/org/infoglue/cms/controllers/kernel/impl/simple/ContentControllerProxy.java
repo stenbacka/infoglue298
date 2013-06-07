@@ -304,15 +304,14 @@ public class ContentControllerProxy extends ContentController
 
 	public void acDelete(InfoGluePrincipal infogluePrincipal, ContentVO contentVO, boolean forceDelete) throws ConstraintException, SystemException, Bug, Exception
 	{
-		Map hashMap = new HashMap();
+		Map<String, Integer> hashMap = new HashMap<String, Integer>();
 		hashMap.put("contentId", contentVO.getId());
-    	
+
 		intercept(hashMap, "Content.Delete", infogluePrincipal);
 
 	    delete(contentVO, infogluePrincipal, forceDelete);
-	}   
-	
-	
+	}
+
 	/**
 	 * This method moves a content after first checking that the user has rights to edit it.
 	 */

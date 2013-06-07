@@ -1214,29 +1214,61 @@ public abstract class BaseController
            	throw new SystemException("An error occurred when we tried to commit an transaction. Reason:" + e.getMessage(), e);    
         }
     }
- 
- 
+
+    /**
+     * Commits the transaction using {@link #commitTransaction(Database)} and clears the thread's database.
+     * Observe that the thread's database will be cleared even if the commit fails.
+     * @throws SystemException If {@link #commitTransaction(Database)} throws an exception
+     */
+	protected static void commitThreadTransaction(Database db) throws SystemException
+	{
+		try
+		{
+			commitTransaction(db);
+		}
+		finally
+		{
+			CastorDatabaseService.clearThreadDatabase();
+		}
+    }
+
     /**
      * Rollbacks a transaction on the named database
      */
-     
-    protected static void rollbackTransaction(Database db) throws SystemException
-    {
-        try
-        {
-            //logger.info("rollbackTransaction a transaction in cms...");
-            
-            if (db != null && db.isActive())
-        	{
-                db.rollback();
+	protected static void rollbackTransaction(Database db) throws SystemException
+	{
+		try
+		{
+			//logger.info("rollbackTransaction a transaction in cms...");
+
+			if (db != null && db.isActive())
+			{
+				db.rollback();
 				db.close();
-        	}
-        }
-        catch(Exception e)
-        {
-            logger.warn("An error occurred when we tried to rollback an transaction. Reason:" + e.getMessage());
-        }
-    }
+			}
+		}
+		catch(Exception e)
+		{
+			logger.warn("An error occurred when we tried to rollback an transaction. Reason:" + e.getMessage());
+		}
+	}
+
+	/**
+     * Rollback the transaction using {@link #rollbackTransaction(Database)} and clears the thread's database.
+     * Observe that the thread's database will be cleared even if the rollback fails.
+     * @throws SystemException If {@link #rollbackTransaction(Database)} throws an exception
+     */
+	protected static void rollbackThreadTransaction(Database db) throws SystemException
+	{
+		try
+		{
+			rollbackTransaction(db);
+		}
+		finally
+		{
+			CastorDatabaseService.clearThreadDatabase();
+		}
+	}
 
     /**
      * Rollbacks a transaction on the named database
