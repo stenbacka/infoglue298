@@ -26,6 +26,7 @@ package org.infoglue.cms.controllers.kernel.impl.simple;
 import org.apache.log4j.Logger;
 import org.exolab.castor.jdo.Database;
 import org.exolab.castor.jdo.JDO;
+import org.exolab.castor.jdo.PersistenceException;
 import org.infoglue.cms.exception.SystemException;
 
 public class CastorDatabaseService //extends DatabaseService
@@ -101,7 +102,15 @@ public class CastorDatabaseService //extends DatabaseService
 		if (db == null)
 		{
 			db = getDatabase();
-			threadDatabase.set(db);
+			try
+			{
+				db.begin();
+				threadDatabase.set(db);
+			}
+			catch (PersistenceException ex)
+			{
+				throw new SystemException("Failed to begin Database transaction", ex);
+			}
 		}
 		else if(logger.isInfoEnabled())
 		{
@@ -110,11 +119,88 @@ public class CastorDatabaseService //extends DatabaseService
 		return db;
 	}
 
-	public synchronized static void clearThreadDatabase()
+	/**
+	 * Gets the current thread's database object and tries to commit the transaction. If the current thread
+	 * doesn't have a database object nothing is done.
+	 */
+	public synchronized static void commitThreadDatabase()
 	{
-		if(logger.isInfoEnabled())
+		Database db = threadDatabase.get();
+
+		if(db == null)
 		{
-			logger.info("Clearing thread database for thread: " + Thread.currentThread().getId());
+			/*
+			 * An exception is thrown and caught here in order to get the stack trace.
+			 */
+			try
+			{
+				throw new IllegalStateException();
+			}
+			catch (IllegalStateException ex)
+			{
+				logger.warn("Tried to commit a thread database but there was no database for the thread. This is not an error but under normal circumstances this should not happen.", ex);
+			}
+			return;
+		}
+
+		if(logger.isInfoEnabled() && db != null)
+		{
+			logger.info("Commit thread database for thread: " + Thread.currentThread().getId());
+		}
+		try
+		{
+			if (db.isActive())
+			{
+				db.commit();
+				db.close();
+			}
+		}
+		catch(Exception ex)
+		{
+			logger.warn("An error occurred when we tried to commit a thread transaction. Reason: " + ex.getMessage());
+		}
+		threadDatabase.set(null);
+	}
+
+	/**
+	 * Gets the current thread's database object and tries to rollback the transaction. If the current thread
+	 * doesn't have a database object nothing is done.
+	 */
+	public synchronized static void rollbackThreadDatabase()
+	{
+		Database db = threadDatabase.get();
+
+		if(db == null)
+		{
+			/*
+			 * An exception is thrown and caught here in order to get the stack trace.
+			 */
+			try
+			{
+				throw new IllegalStateException();
+			}
+			catch (IllegalStateException ex)
+			{
+				logger.warn("Tried to rollback a thread database but there was no database for the thread. This is not an error but under normal circumstances this should not happen.", ex);
+			}
+			return;
+		}
+
+		if(logger.isInfoEnabled() && db != null)
+		{
+			logger.info("Rollback thread database for thread: " + Thread.currentThread().getId());
+		}
+		try
+		{
+			if (db.isActive())
+			{
+				db.rollback();
+				db.close();
+			}
+		}
+		catch(Exception ex)
+		{
+			logger.warn("An error occurred when we tried to rollback a thread transaction. Reason: " + ex.getMessage());
 		}
 		threadDatabase.set(null);
 	}

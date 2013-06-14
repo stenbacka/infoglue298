@@ -85,54 +85,52 @@ public class RepositoryController extends BaseController
 	
     public void delete(RepositoryVO repositoryVO, String userName, boolean forceDelete, InfoGluePrincipal infoGluePrincipal) throws ConstraintException, SystemException
     {
-		Database db = CastorDatabaseService.getDatabase();
+		Database db = CastorDatabaseService.getThreadDatabase();
 		ConstraintExceptionBuffer ceb = new ConstraintExceptionBuffer();
 
 		Repository repository = null;
-	
-		beginTransaction(db);
 
 		try
 		{
 			repository = getRepositoryWithId(repositoryVO.getRepositoryId(), db);
-			
+
 			RepositoryLanguageController.getController().deleteRepositoryLanguages(repository, db);
-			
-			ContentVO contentVO = ContentControllerProxy.getController().getRootContentVO(repositoryVO.getRepositoryId(), userName, false);
-			if(contentVO != null)
-			{
-				if(forceDelete)
-					ContentController.getContentController().delete(contentVO, db, true, true, true, infoGluePrincipal);
-				else
-					ContentController.getContentController().delete(contentVO, infoGluePrincipal, db);
-			}
-			
+
 			SiteNodeVO siteNodeVO = SiteNodeController.getController().getRootSiteNodeVO(repositoryVO.getRepositoryId());
 			if(siteNodeVO != null)
 			{
 				if(forceDelete)
-					SiteNodeController.getController().delete(siteNodeVO, db, true, infoGluePrincipal);
+					SiteNodeController.getController().delete(siteNodeVO, db, true, infoGluePrincipal, true);
 				else
-					SiteNodeController.getController().delete(siteNodeVO, db, infoGluePrincipal);
+					SiteNodeController.getController().delete(siteNodeVO, db, false, infoGluePrincipal, true);
 			}
-			
+
+			ContentVO contentVO = ContentControllerProxy.getController().getRootContentVO(repositoryVO.getRepositoryId(), userName, false);
+			if(contentVO != null)
+			{
+				if(forceDelete)
+					ContentController.getContentController().delete(contentVO, db, true, true, true, infoGluePrincipal, true);
+				else
+					ContentController.getContentController().delete(contentVO, infoGluePrincipal, true, db);
+			}
+
 			deleteEntity(RepositoryImpl.class, repositoryVO.getRepositoryId(), db);
-	
+
 			//If any of the validations or setMethods reported an error, we throw them up now before create.
 			ceb.throwIfNotEmpty();
-    
-			commitTransaction(db);
+
+			commitThreadTransaction();
 		}
 		catch(ConstraintException ce)
 		{
 			logger.warn("An error occurred so we should not completes the transaction:" + ce, ce);
-			rollbackTransaction(db);
+			rollbackThreadTransaction();
 			throw ce;
 		}
 		catch(Exception e)
 		{
 			logger.error("An error occurred so we should not completes the transaction:" + e, e);
-			rollbackTransaction(db);
+			rollbackThreadTransaction();
 			throw new SystemException(e.getMessage());
 		}
     } 
