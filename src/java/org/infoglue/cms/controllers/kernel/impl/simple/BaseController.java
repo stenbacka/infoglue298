@@ -1216,20 +1216,13 @@ public abstract class BaseController
     }
 
     /**
-     * Commits the transaction using {@link #commitTransaction(Database)} and clears the thread's database.
+     * Commit the current thread's database object and clear the database object from the thread if the object exists.
      * Observe that the thread's database will be cleared even if the commit fails.
-     * @throws SystemException If {@link #commitTransaction(Database)} throws an exception
+     * @throws SystemException If {@link Database#commit()} throws an exception
      */
-	protected static void commitThreadTransaction(Database db) throws SystemException
+	protected static void commitThreadTransaction() throws SystemException
 	{
-		try
-		{
-			commitTransaction(db);
-		}
-		finally
-		{
-			CastorDatabaseService.clearThreadDatabase();
-		}
+		CastorDatabaseService.commitThreadDatabase();
     }
 
     /**
@@ -1254,20 +1247,13 @@ public abstract class BaseController
 	}
 
 	/**
-     * Rollback the transaction using {@link #rollbackTransaction(Database)} and clears the thread's database.
-     * Observe that the thread's database will be cleared even if the rollback fails.
-     * @throws SystemException If {@link #rollbackTransaction(Database)} throws an exception
+     * Rollback the current thread's database object and clear the database object from the thread if the object exists.
+     * Observe that the thread's database will be cleared even if the rollback throws an exception.
+     * @throws SystemException If the {@link Database#rollback()} throws an exception
      */
-	protected static void rollbackThreadTransaction(Database db) throws SystemException
+	protected static void rollbackThreadTransaction() throws SystemException
 	{
-		try
-		{
-			rollbackTransaction(db);
-		}
-		finally
-		{
-			CastorDatabaseService.clearThreadDatabase();
-		}
+		CastorDatabaseService.rollbackThreadDatabase();
 	}
 
     /**

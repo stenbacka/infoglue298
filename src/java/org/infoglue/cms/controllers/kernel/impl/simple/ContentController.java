@@ -335,21 +335,21 @@ public class ContentController extends BaseController
 		beginTransaction(db);
 		try
 		{
-			delete(contentVO, db, false, false, forceDelete, infogluePrincipal, contactPersons);
+			delete(contentVO, db, false, false, forceDelete, infogluePrincipal, contactPersons, false);
 
-			commitThreadTransaction(db);
+			commitThreadTransaction();
 
 		}
 		catch(ConstraintException ce)
 		{
 			logger.warn("An error occurred so we should not complete the transaction:" + ce, ce);
-			rollbackThreadTransaction(db);
+			rollbackThreadTransaction();
 			throw ce;
 		}
 		catch(Exception e)
 		{
 			logger.error("An error occurred so we should not complete the transaction:" + e, e);
-			rollbackThreadTransaction(db);
+			rollbackThreadTransaction();
 			throw new SystemException(e.getMessage());
 		}
 
@@ -380,21 +380,24 @@ public class ContentController extends BaseController
 
 	public void delete(ContentVO contentVO, InfoGluePrincipal infogluePrincipal, Database db) throws ConstraintException, SystemException, Exception
 	{
-		Map<String, List<ReferenceBean>> contactPersons = Collections.emptyMap();
-	    delete(contentVO, db, false, false, false, infogluePrincipal, contactPersons);
+	    delete(contentVO, db, false, false, false, infogluePrincipal, new HashMap<String, List<ReferenceBean>>(), false);
 	}
 
-	public void delete(ContentVO contentVO, Database db, boolean skipRelationCheck, boolean skipServiceBindings, boolean forceDelete, InfoGluePrincipal infogluePrincipal) throws ConstraintException, SystemException, Exception
+	public void delete(ContentVO contentVO, InfoGluePrincipal infogluePrincipal, boolean excludeReferencesInSite, Database db) throws ConstraintException, SystemException, Exception
 	{
-		Map<String, List<ReferenceBean>> contactPersons = Collections.emptyMap();
-		delete(contentVO, db, skipRelationCheck, skipServiceBindings, forceDelete, infogluePrincipal, contactPersons);
+		delete(contentVO, db, false, false, false, infogluePrincipal, new HashMap<String, List<ReferenceBean>>(), excludeReferencesInSite);
+	}
+
+	public void delete(ContentVO contentVO, Database db, boolean skipRelationCheck, boolean skipServiceBindings, boolean forceDelete, InfoGluePrincipal infogluePrincipal, boolean excludeReferencesInSite) throws ConstraintException, SystemException, Exception
+	{
+		delete(contentVO, db, skipRelationCheck, skipServiceBindings, forceDelete, infogluePrincipal, new HashMap<String, List<ReferenceBean>>(), excludeReferencesInSite);
 	}
 
 	/**
 	 * This method deletes a content and also erases all the children and all versions.
 	 */
 
-	public /*synchronized*/ void delete(ContentVO contentVO, Database db, boolean skipRelationCheck, boolean skipServiceBindings, boolean forceDelete, InfoGluePrincipal infogluePrincipal, Map<String, List<ReferenceBean>> contactPersons) throws ConstraintException, SystemException, Exception
+	public /*synchronized*/ void delete(ContentVO contentVO, Database db, boolean skipRelationCheck, boolean skipServiceBindings, boolean forceDelete, InfoGluePrincipal infogluePrincipal, Map<String, List<ReferenceBean>> contactPersons, boolean excludeReferencesInSite) throws ConstraintException, SystemException, Exception
 	{
 		Content content = null;
 		try
@@ -423,7 +426,7 @@ public class ContentController extends BaseController
 				    Content candidate = (Content)childContentIterator.next();
 				    if(candidate.getId().equals(contentVO.getContentId()))
 				    {
-				        deleteRecursive(content, childContentIterator, db, skipRelationCheck, skipServiceBindings, forceDelete, infogluePrincipal, contactPersons, notifyResponsibleOnReferenceChange);
+				        deleteRecursive(content, childContentIterator, db, skipRelationCheck, skipServiceBindings, forceDelete, infogluePrincipal, contactPersons, notifyResponsibleOnReferenceChange, excludeReferencesInSite);
 				    }
 				}
 			/*
@@ -432,7 +435,7 @@ public class ContentController extends BaseController
 		}
 		else
 		{
-		    deleteRecursive(content, null, db, skipRelationCheck, skipServiceBindings, forceDelete, infogluePrincipal, contactPersons, notifyResponsibleOnReferenceChange);
+		    deleteRecursive(content, null, db, skipRelationCheck, skipServiceBindings, forceDelete, infogluePrincipal, contactPersons, notifyResponsibleOnReferenceChange, excludeReferencesInSite);
 		}
 	}
 
@@ -440,9 +443,9 @@ public class ContentController extends BaseController
 	 * Recursively deletes all contents and their versions. Also updates related entities about the change.
 	 */
 
-    private void deleteRecursive(Content content, Iterator parentIterator, Database db, boolean skipRelationCheck, boolean skipServiceBindings, boolean forceDelete, InfoGluePrincipal infogluePrincipal, Map<String, List<ReferenceBean>> contactPersons, boolean notifyResponsibleOnReferenceChange) throws ConstraintException, SystemException, Exception
+    private void deleteRecursive(Content content, Iterator parentIterator, Database db, boolean skipRelationCheck, boolean skipServiceBindings, boolean forceDelete, InfoGluePrincipal infogluePrincipal, Map<String, List<ReferenceBean>> contactPersons, boolean notifyResponsibleOnReferenceChange, boolean excludeReferencesInSite) throws ConstraintException, SystemException, Exception
     {
-    	List<ReferenceBean> referenceBeanList = RegistryController.getController().getReferencingObjectsForContent(content.getContentId(), -1, db);
+    	List<ReferenceBean> referenceBeanList = RegistryController.getController().getReferencingObjectsForContent(content.getContentId(), -1, true, excludeReferencesInSite, db);
         if(!skipRelationCheck)
         {
 			if(referenceBeanList != null && referenceBeanList.size() > 0 && !forceDelete)
@@ -455,7 +458,7 @@ public class ContentController extends BaseController
 		while(childrenIterator.hasNext())
 		{
 			Content childContent = (Content)childrenIterator.next();
-			deleteRecursive(childContent, childrenIterator, db, skipRelationCheck, skipServiceBindings, forceDelete, infogluePrincipal, contactPersons, notifyResponsibleOnReferenceChange);
+			deleteRecursive(childContent, childrenIterator, db, skipRelationCheck, skipServiceBindings, forceDelete, infogluePrincipal, contactPersons, notifyResponsibleOnReferenceChange, excludeReferencesInSite);
    		}
 		content.setChildren(new ArrayList());
 

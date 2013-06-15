@@ -53,6 +53,8 @@ import org.infoglue.cms.entities.management.Language;
 import org.infoglue.cms.entities.management.LanguageVO;
 import org.infoglue.cms.entities.management.Registry;
 import org.infoglue.cms.entities.management.RegistryVO;
+import org.infoglue.cms.entities.management.RepositoryVO;
+import org.infoglue.cms.entities.management.SystemUser;
 import org.infoglue.cms.entities.management.impl.simple.RegistryImpl;
 import org.infoglue.cms.entities.structure.Qualifyer;
 import org.infoglue.cms.entities.structure.ServiceBinding;
@@ -1121,15 +1123,15 @@ public class RegistryController extends BaseController
 
 	public List<ReferenceBean> getReferencingObjectsForContent(Integer contentId) throws SystemException
     {
-		return getReferencingObjectsForContent(contentId, -1, true);
+		return getReferencingObjectsForContent(contentId, -1, true, false);
     }
 
 	public List<ReferenceBean> getReferencingObjectsForContent(Integer contentId, int maxRows) throws SystemException
 	{
-		return getReferencingObjectsForContent(contentId, maxRows, true);
+		return getReferencingObjectsForContent(contentId, maxRows, true, false);
 	}
 
-	public List<ReferenceBean> getReferencingObjectsForContent(Integer contentId, int maxRows, boolean excludeInternalContentReferences) throws SystemException
+	public List<ReferenceBean> getReferencingObjectsForContent(Integer contentId, int maxRows, boolean excludeInternalContentReferences, boolean excludeRepositoryInternalReferences) throws SystemException
     {
 		List<ReferenceBean> referenceBeanList = new ArrayList<ReferenceBean>();
 
@@ -1139,7 +1141,7 @@ public class RegistryController extends BaseController
 		{
 			beginTransaction(db);
 
-			referenceBeanList = getReferencingObjectsForContent(contentId, maxRows, excludeInternalContentReferences, db);
+			referenceBeanList = getReferencingObjectsForContent(contentId, maxRows, excludeInternalContentReferences, excludeRepositoryInternalReferences, db);
 
 	        commitTransaction(db);
 		}
@@ -1157,23 +1159,25 @@ public class RegistryController extends BaseController
 
 	public List<ReferenceBean> getReferencingObjectsForContent(Integer contentId, int maxRows, Database db) throws SystemException, Exception
 	{
-		return getReferencingObjectsForContent(contentId, maxRows, true, db);
+		return getReferencingObjectsForContent(contentId, maxRows, true, false, db);
 	}
 
-	public List<ReferenceBean> getReferencingObjectsForContent(Integer contentId, int maxRows, boolean excludeInternalContentReferences, Database db) throws SystemException, Exception
-    {
-        List<ReferenceBean> referenceBeanList = new ArrayList<ReferenceBean>();
+	public List<ReferenceBean> getReferencingObjectsForContent(Integer contentId, int maxRows, boolean excludeInternalContentReferences, boolean excludeRepositoryInternalReferences, Database db) throws SystemException, Exception
+	{
+		List<ReferenceBean> referenceBeanList = new ArrayList<ReferenceBean>();
 
-        Map<String,Boolean> checkedLanguageVersions = new HashMap<String,Boolean>();
+		Map<String,Boolean> checkedLanguageVersions = new HashMap<String,Boolean>();
 		Map<String, ReferenceBean> entries = new HashMap<String, ReferenceBean>();
 
 		List<RegistryVO> registryEntires = getMatchingRegistryVOList(Content.class.getName(), contentId.toString(), maxRows, db);
-        Iterator<RegistryVO> registryEntiresIterator = registryEntires.iterator();
-        while(registryEntiresIterator.hasNext())
-        {
+		Iterator<RegistryVO> registryEntiresIterator = registryEntires.iterator();
+		ContentVO contentVO = ContentController.getContentController().getContentVOWithId(contentId, db);
+		RepositoryVO repositoryVO = RepositoryController.getController().getRepositoryVOWithId(contentVO.getRepositoryId(), db);
+		while(registryEntiresIterator.hasNext())
+		{
             RegistryVO registryVO = registryEntiresIterator.next();
             logger.info("registryVO:" + registryVO.getReferencingEntityId() + ":" +  registryVO.getReferencingEntityCompletingId());
-            ReferenceBean referenceBean = getReferenceBeanFromRegistryVO(registryVO, entries, checkedLanguageVersions, db);
+            ReferenceBean referenceBean = getReferenceBeanFromRegistryVO(registryVO, entries, checkedLanguageVersions, repositoryVO.getRepositoryId(), db);
             if (referenceBean != null)
             {
             	referenceBeanList.add(referenceBean);
@@ -1475,45 +1479,67 @@ public class RegistryController extends BaseController
 	    	LanguageVO masterLanguage = LanguageController.getController().getMasterLanguage(siteNodeVO.getRepositoryId(), db);
 			if (masterLanguage != null)
 			{
-	    		ContentVersionVO metaInfoContentVersion = ContentVersionController.getContentVersionController().getLatestActiveContentVersionVO(siteNodeVO.getMetaInfoContentId(), masterLanguage.getId(), db);
-	    		if (metaInfoContentVersion != null)
-	    		{
-	    			String contactPersonEmail = ContentVersionController.getContentVersionController().getAttributeValue(metaInfoContentVersion, contactPersonEmailMetaInfoAttribute, false);
-	    			if (contactPersonEmail != null && !contactPersonEmail.equals(""))
-	    			{
-		    			if (logger.isDebugEnabled())
+				try
+				{
+		    		ContentVersionVO metaInfoContentVersion = ContentVersionController.getContentVersionController().getLatestActiveContentVersionVO(siteNodeVO.getMetaInfoContentId(), masterLanguage.getId(), db);
+		    		if (metaInfoContentVersion != null)
+		    		{
+		    			String contactPersonEmail = ContentVersionController.getContentVersionController().getAttributeValue(metaInfoContentVersion, contactPersonEmailMetaInfoAttribute, false);
+		    			if (contactPersonEmail != null && !contactPersonEmail.equals(""))
 		    			{
-		    				logger.debug("Reading contact person email from: SiteNode, meta info, master language. Id: " + siteNodeVO.getId());
+			    			if (logger.isDebugEnabled())
+			    			{
+			    				logger.debug("Reading contact person email from: SiteNode, meta info, master language. Id: " + siteNodeVO.getId());
+			    			}
+			    			return contactPersonEmail;
 		    			}
-		    			return contactPersonEmail;
-	    			}
-	    		}
+					}
+				}
+				catch (SystemException ex)
+				{
+					logger.info("Error getting contact person from meta-info content. Maybe the content has been deleted. Message: " + ex.getMessage());
+				}
 			}
 
 			@SuppressWarnings("unchecked")
 			List<LanguageVO> repositoryLanguages = LanguageController.getController().getLanguageVOList(siteNodeVO.getRepositoryId(), db);
 			for (LanguageVO language : repositoryLanguages)
 			{
-				ContentVersionVO metaInfoContentVersion = ContentVersionController.getContentVersionController().getLatestActiveContentVersionVO(siteNodeVO.getMetaInfoContentId(), language.getId(), db);
-	    		if (metaInfoContentVersion != null)
-	    		{
-	    			String contactPersonEmail = ContentVersionController.getContentVersionController().getAttributeValue(metaInfoContentVersion, contactPersonEmailMetaInfoAttribute, false);
-	    			if (contactPersonEmail != null && !contactPersonEmail.equals(""))
-	    			{
-		    			if (logger.isDebugEnabled() && contactPersonEmail != null)
+				try
+				{
+					ContentVersionVO metaInfoContentVersion = ContentVersionController.getContentVersionController().getLatestActiveContentVersionVO(siteNodeVO.getMetaInfoContentId(), language.getId(), db);
+		    		if (metaInfoContentVersion != null)
+		    		{
+		    			String contactPersonEmail = ContentVersionController.getContentVersionController().getAttributeValue(metaInfoContentVersion, contactPersonEmailMetaInfoAttribute, false);
+		    			if (contactPersonEmail != null && !contactPersonEmail.equals(""))
 		    			{
-		    				if (logger.isDebugEnabled())
+			    			if (logger.isDebugEnabled() && contactPersonEmail != null)
 			    			{
-		    					logger.debug("Reading contact person email from: SiteNode, meta info, language. Language-id: " + language.getId() + ", Id: " + siteNodeVO.getId());
+			    				if (logger.isDebugEnabled())
+				    			{
+			    					logger.debug("Reading contact person email from: SiteNode, meta info, language. Language-id: " + language.getId() + ", Id: " + siteNodeVO.getId());
+				    			}
+			    				return contactPersonEmail;
 			    			}
-		    				return contactPersonEmail;
-		    			}
+			    		}
 		    		}
-	    		}
+				}
+				catch (SystemException ex)
+				{
+					logger.info("Error getting contact person from meta-info content for language: '" + language.getLanguageId() + "'. Maybe the content has been deleted. Message: " + ex.getMessage());
+				}
 			}
-    	}
+		}
 
-    	InfoGluePrincipal user = UserControllerProxy.getController(db).getUser(siteNodeVO.getCreatorName());
+		InfoGluePrincipal user = null;
+		try
+		{
+			user = UserControllerProxy.getController(db).getUser(siteNodeVO.getCreatorName());
+		}
+		catch (SystemException ex)
+		{
+			logger.info("Error getting contact person from principal. Maybe the principal has been deleted. Message: " + ex.getMessage());
+		}
 		if (user != null)
 		{
 			if (logger.isDebugEnabled())
@@ -1557,12 +1583,25 @@ public class RegistryController extends BaseController
         return referenceBeanList;
     }
 
-    public List<ReferenceBean> getReferencingObjectsForSiteNode(Integer siteNodeId, int maxRows, Database db) throws SystemException, Exception
+	public List<ReferenceBean> getReferencingObjectsForSiteNode(Integer siteNodeId, int maxRows, Database db) throws SystemException, Exception
+	{
+		return getReferencingObjectsForSiteNode(siteNodeId, maxRows, false, db);
+	}
+
+    public List<ReferenceBean> getReferencingObjectsForSiteNode(Integer siteNodeId, int maxRows, boolean excludeReferenceInSite, Database db) throws SystemException, Exception
     {
         List<ReferenceBean> referenceBeanList = new ArrayList<ReferenceBean>();
 
         Map<String,Boolean> checkedLanguageVersions = new HashMap<String,Boolean>();
 		Map<String, ReferenceBean> entries = new HashMap<String, ReferenceBean>();
+		Integer excludeRespositoryId = null;
+		if (excludeReferenceInSite)
+		{
+			@SuppressWarnings("static-access")
+			SiteNodeVO siteNodeVO = SiteNodeController.getController().getSiteNodeVOWithId(siteNodeId, db);
+			RepositoryVO repositoryVO = RepositoryController.getController().getRepositoryVOWithId(siteNodeVO.getRepositoryId(), db);
+			excludeRespositoryId = repositoryVO.getRepositoryId();
+		}
 
 		List<RegistryVO> registryEntires = getMatchingRegistryVOList(SiteNode.class.getName(), siteNodeId.toString(), maxRows, db);
         Iterator<RegistryVO> registryEntiresIterator = registryEntires.iterator();
@@ -1570,7 +1609,7 @@ public class RegistryController extends BaseController
         {
             RegistryVO registryVO = registryEntiresIterator.next();
             logger.info("registryVO:" + registryVO.getReferencingEntityId() + ":" +  registryVO.getReferencingEntityCompletingId());
-            ReferenceBean referenceBean = getReferenceBeanFromRegistryVO(registryVO, entries, checkedLanguageVersions, db);
+            ReferenceBean referenceBean = getReferenceBeanFromRegistryVO(registryVO, entries, checkedLanguageVersions, excludeRespositoryId, db);
             if (referenceBean != null)
             {
             	referenceBeanList.add(referenceBean);
@@ -1586,9 +1625,25 @@ public class RegistryController extends BaseController
         }
 
         return referenceBeanList;
-    }
+	}
 
-    private ReferenceBean getReferenceBeanFromRegistryVO(RegistryVO registryVO, Map<String, ReferenceBean> entries, Map<String,Boolean> checkedLanguageVersions, Database db)
+    /**
+     * Calls {@link #getReferenceBeanFromRegistryVO(RegistryVO, Map, Map, Integer, Database)} without any repository to exclude.
+     */
+	private ReferenceBean getReferenceBeanFromRegistryVO(RegistryVO registryVO, Map<String, ReferenceBean> entries, Map<String,Boolean> checkedLanguageVersions, Database db)
+	{
+		return getReferenceBeanFromRegistryVO(registryVO, entries, checkedLanguageVersions, null, db);
+	}
+
+	/**
+	 * 
+	 * @param registryVO
+	 * @param entries
+	 * @param checkedLanguageVersions
+	 * @param repositoryToExclude Referencing objects in this repository will not be added. Use null to include all repositories.
+	 * @param db
+	 */
+    private ReferenceBean getReferenceBeanFromRegistryVO(RegistryVO registryVO, Map<String, ReferenceBean> entries, Map<String,Boolean> checkedLanguageVersions, Integer repositoryToExclude, Database db)
     {
     	ReferenceBean result = null;
         boolean add = true;
@@ -1655,9 +1710,14 @@ public class RegistryController extends BaseController
 								add = false;
 		                	}
 		                }
+						ContentVO contentVO = ContentController.getContentController().getContentVOWithId(contentVersionVO.getContentId(), db);
+						if (repositoryToExclude != null && contentVO.getRepositoryId().equals(repositoryToExclude))
+						{
+							add = false;
+							result = null;
+						}
 		                if (add)
 		                {
-		                	ContentVO contentVO = ContentController.getContentController().getContentVOWithId(contentVersionVO.getContentId(), db);
 				    		existingReferenceBean.setName(contentVO.getName());
 				    		existingReferenceBean.setPath(ContentController.getContentController().getContentPath(contentVO.getContentId(), false, true, db));
 				    		existingReferenceBean.setReferencingCompletingObject(contentVO);
@@ -1687,7 +1747,15 @@ public class RegistryController extends BaseController
 				add = false;
 				result = null;
 				logger.error("Error when creating reference bean from Registry entry for Content. Message: " + ex.getMessage() + ". Class: " + ex.getClass());
-				logger.warn("Error when creating reference bean from Registry entry for Content.", ex);
+				// With registries there is a chance that the referencing object is gone. No need to print a stack trace for those cases.
+				if (ex instanceof SystemException)
+				{
+					logger.warn("Error when creating reference bean from Registry entry for Content.");
+				}
+				else
+				{
+					logger.warn("Error when creating reference bean from Registry entry for Content.", ex);
+				}
             }
         }
         else
@@ -1723,6 +1791,11 @@ public class RegistryController extends BaseController
 							add = false;
 	                	}
 
+						if (repositoryToExclude != null && siteNodeVO.getRepositoryId().equals(repositoryToExclude))
+						{
+							add = false;
+							result = null;
+						}
 		            	if (add)
 		            	{
 				    		existingReferenceBean.setName(siteNodeVO.getName());

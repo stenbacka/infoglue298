@@ -213,20 +213,20 @@ public class SiteNodeController extends BaseController
         beginTransaction(db);
 		try
         {
-			delete(siteNodeVO, db, forceDelete, infogluePrincipal, contactPersons);
+			delete(siteNodeVO, db, forceDelete, infogluePrincipal, contactPersons, false);
 
-	    	commitThreadTransaction(db);
+	    	commitThreadTransaction();
         }
         catch(ConstraintException ce)
         {
         	logger.warn("An error occurred so we should not complete the transaction:" + ce, ce);
-            rollbackThreadTransaction(db);
+            rollbackThreadTransaction();
             throw ce;
         }
         catch(Throwable tr)
         {
             logger.error("An error occurred so we should not complete the transaction:" + tr, tr);
-            rollbackThreadTransaction(db);
+            rollbackThreadTransaction();
             throw new SystemException(tr.getMessage());
         }
 
@@ -258,7 +258,7 @@ public class SiteNodeController extends BaseController
 	    
 	public void delete(SiteNodeVO siteNodeVO, Database db, InfoGluePrincipal infogluePrincipal) throws ConstraintException, SystemException, Exception
 	{
-		delete(siteNodeVO, db, false, infogluePrincipal, new HashMap<String, List<ReferenceBean>>());
+		delete(siteNodeVO, db, false, infogluePrincipal, null, false);
 	}
 
 	/**
@@ -268,14 +268,18 @@ public class SiteNodeController extends BaseController
 	 */
 	public void delete(SiteNodeVO siteNodeVO, Database db, boolean forceDelete, InfoGluePrincipal infogluePrincipal) throws ConstraintException, SystemException, Exception
 	{
-		delete(siteNodeVO, db, forceDelete, infogluePrincipal, new HashMap<String, List<ReferenceBean>>());
+		delete(siteNodeVO, db, forceDelete, infogluePrincipal, null, false);
 	}
-	
+
+	public void delete(SiteNodeVO siteNodeVO, Database db, boolean forceDelete, InfoGluePrincipal infogluePrincipal, boolean excludeReferenceInSite) throws ConstraintException, SystemException, Exception
+	{
+		delete(siteNodeVO, db, forceDelete, infogluePrincipal, null, excludeReferenceInSite);
+	}
+
 	/**
 	 * This method deletes a siteNode and also erases all the children and all versions.
 	 */
-	    
-	public void delete(SiteNodeVO siteNodeVO, Database db, boolean forceDelete, InfoGluePrincipal infogluePrincipal, Map<String, List<ReferenceBean>> contactPersons) throws ConstraintException, SystemException, Exception
+	public void delete(SiteNodeVO siteNodeVO, Database db, boolean forceDelete, InfoGluePrincipal infogluePrincipal, Map<String, List<ReferenceBean>> contactPersons, boolean excludeReferenceInSite) throws ConstraintException, SystemException, Exception
 	{
 		SiteNode siteNode = getSiteNodeWithId(siteNodeVO.getSiteNodeId(), db);
 		SiteNode parent = siteNode.getParentSiteNode();
@@ -287,14 +291,14 @@ public class SiteNodeController extends BaseController
 			{
 			    SiteNode candidate = (SiteNode)childSiteNodeIterator.next();
 			    if(candidate.getId().equals(siteNodeVO.getSiteNodeId()))
-			        deleteRecursive(siteNode, childSiteNodeIterator, db, forceDelete, infogluePrincipal, contactPersons, notifyResponsibleOnReferenceChange);
+			        deleteRecursive(siteNode, childSiteNodeIterator, db, forceDelete, infogluePrincipal, contactPersons, notifyResponsibleOnReferenceChange, excludeReferenceInSite);
 			}
 		}
 		else
 		{
-		    deleteRecursive(siteNode, null, db, forceDelete, infogluePrincipal, contactPersons, notifyResponsibleOnReferenceChange);
+		    deleteRecursive(siteNode, null, db, forceDelete, infogluePrincipal, contactPersons, notifyResponsibleOnReferenceChange, excludeReferenceInSite);
 		}
-	}        
+	}
 
 
 	/**
@@ -303,9 +307,9 @@ public class SiteNodeController extends BaseController
 	 * We have to begin and commit all the time...
 	 */
 	
-    private void deleteRecursive(SiteNode siteNode, Iterator parentIterator, Database db, boolean forceDelete, InfoGluePrincipal infoGluePrincipal, Map<String, List<ReferenceBean>> contactPersons, boolean notifyContactPersons) throws ConstraintException, SystemException, Exception
+    private void deleteRecursive(SiteNode siteNode, Iterator parentIterator, Database db, boolean forceDelete, InfoGluePrincipal infoGluePrincipal, Map<String, List<ReferenceBean>> contactPersons, boolean notifyContactPersons, boolean excludeReferencesInSite) throws ConstraintException, SystemException, Exception
     {
-        List<ReferenceBean> referenceBeanList = RegistryController.getController().getReferencingObjectsForSiteNode(siteNode.getId(), -1, db);
+        List<ReferenceBean> referenceBeanList = RegistryController.getController().getReferencingObjectsForSiteNode(siteNode.getId(), -1, excludeReferencesInSite, db);
 
 		if(referenceBeanList != null && referenceBeanList.size() > 0 && !forceDelete)
 			throw new ConstraintException("SiteNode.stateId", "3405");
@@ -316,7 +320,7 @@ public class SiteNodeController extends BaseController
 		while(i.hasNext())
 		{
 			SiteNode childSiteNode = i.next();
-			deleteRecursive(childSiteNode, i, db, forceDelete, infoGluePrincipal, contactPersons, notifyContactPersons);
+			deleteRecursive(childSiteNode, i, db, forceDelete, infoGluePrincipal, contactPersons, notifyContactPersons, excludeReferencesInSite);
    		}
 		siteNode.setChildSiteNodes(new ArrayList<SiteNode>());
 
@@ -332,7 +336,7 @@ public class SiteNodeController extends BaseController
 			}
 			if (notifyContactPersons)
 			{
-				if (referenceBeanList != null)
+				if (referenceBeanList != null && contactPersons != null)
 				{
 					logger.info("Found " + referenceBeanList.size() + " people to notify about SiteNode removal. SiteNode.id: " + siteNode.getSiteNodeId());
 					contactPersons.put(getSiteNodePath(siteNode.getSiteNodeId(), false, true, db), referenceBeanList);
