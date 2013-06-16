@@ -43,6 +43,7 @@ import org.exolab.castor.jdo.OQLQuery;
 import org.exolab.castor.jdo.QueryResults;
 import org.infoglue.cms.applications.databeans.ReferenceBean;
 import org.infoglue.cms.applications.databeans.ReferenceVersionBean;
+import org.infoglue.cms.applications.databeans.RelationReferenceBean;
 import org.infoglue.cms.entities.content.Content;
 import org.infoglue.cms.entities.content.ContentVO;
 import org.infoglue.cms.entities.content.ContentVersion;
@@ -54,7 +55,6 @@ import org.infoglue.cms.entities.management.LanguageVO;
 import org.infoglue.cms.entities.management.Registry;
 import org.infoglue.cms.entities.management.RegistryVO;
 import org.infoglue.cms.entities.management.RepositoryVO;
-import org.infoglue.cms.entities.management.SystemUser;
 import org.infoglue.cms.entities.management.impl.simple.RegistryImpl;
 import org.infoglue.cms.entities.structure.Qualifyer;
 import org.infoglue.cms.entities.structure.ServiceBinding;
@@ -67,6 +67,8 @@ import org.infoglue.cms.exception.ConstraintException;
 import org.infoglue.cms.exception.SystemException;
 import org.infoglue.cms.security.InfoGluePrincipal;
 import org.infoglue.cms.util.CmsPropertyHandler;
+
+import com.sun.star.lang.IllegalArgumentException;
 
 
 /**
@@ -92,12 +94,14 @@ public class RegistryController extends BaseController
 	{
 	}
 	
-    public List getRegistryVOList() throws SystemException, Bug
+    @SuppressWarnings("unchecked")
+	public List<RegistryVO> getRegistryVOList() throws SystemException, Bug
     {
         return getAllVOObjects(RegistryImpl.class, "registryId");
     }
 
-    public List getRegistryVOList(Database db) throws SystemException, Bug
+    @SuppressWarnings("unchecked")
+	public List<RegistryVO> getRegistryVOList(Database db) throws SystemException, Bug
     {
         return getAllVOObjects(RegistryImpl.class, "registryId", db);
     }
@@ -394,28 +398,27 @@ public class RegistryController extends BaseController
 	 */
 	public void updateContentVersion(ContentVersionVO contentVersionVO) throws ConstraintException, SystemException
 	{
-	    String versionValue = contentVersionVO.getVersionValue();
-	    
+		// This call propably do nothing but left here since it was written by someone for some reason at one point
+	    contentVersionVO.getVersionValue();
+
 	    Database db = CastorDatabaseService.getDatabase();
-		
+
 		try 
 		{
 			beginTransaction(db);
-		
+
 			ContentVersion contentVersion = ContentVersionController.getContentVersionController().getContentVersionWithId(contentVersionVO.getContentVersionId(), db);
 			updateContentVersion(contentVersion, db);
-		    
+
 			commitTransaction(db);
 		}
-		catch (Exception e)		
+		catch (Exception e)
 		{
 		    rollbackTransaction(db);
-			throw new SystemException("An error occurred when we tried to fetch which sitenode uses a metainfo. Reason:" + e.getMessage(), e);			
+			throw new SystemException("An error occurred when we tried to fetch which sitenode uses a metainfo. Reason:" + e.getMessage(), e);
 		}
 	}
 
-	
-	
 	/**
 	 * this method goes through all inline stuff and all relations if ordinary content 
 	 * and all components and bindings if a metainfo.
@@ -549,15 +552,16 @@ public class RegistryController extends BaseController
 	 * @throws Exception
 	 */
 	
+	@SuppressWarnings({ "rawtypes", "unused" })
 	public void updateSiteNodeVersion(SiteNodeVersion siteNodeVersion, Database db) throws ConstraintException, SystemException, Exception
 	{
 	    SiteNodeVersion oldSiteNodeVersion = siteNodeVersion;
 	    SiteNode oldSiteNode = oldSiteNodeVersion.getOwningSiteNode();
-	    
+
 	    logger.info("Before clearing old registry...");
 	    clearRegistryVOList(SiteNodeVersion.class.getName(), siteNodeVersion.getId().toString(), db);
 	    logger.info("After clearing old registry...");
-	    
+
 		Collection serviceBindings = siteNodeVersion.getServiceBindings();
 		Iterator serviceBindingIterator = serviceBindings.iterator();
 		while(serviceBindingIterator.hasNext())
@@ -571,7 +575,7 @@ public class RegistryController extends BaseController
 			        Qualifyer qualifyer = (Qualifyer)qualifyersIterator.next();
 			        String name = qualifyer.getName();
 			        String value = qualifyer.getValue();
-	
+
 	                try
 	                {
 				        RegistryVO registryVO = new RegistryVO();
@@ -579,20 +583,20 @@ public class RegistryController extends BaseController
 			            if(name.equalsIgnoreCase("contentId"))
 				        {
 			                Content content = ContentController.getContentController().getContentWithId(new Integer(value), db);
-			            
+
 			                registryVO.setEntityId(value);
 				            registryVO.setEntityName(Content.class.getName());
-				            
+
 				            registryVO.setReferencingEntityId(siteNodeVersion.getId().toString());
 				            registryVO.setReferencingEntityName(SiteNodeVersion.class.getName());
 				            registryVO.setReferencingEntityCompletingId(oldSiteNode.getId().toString());
 				            registryVO.setReferencingEntityCompletingName(SiteNode.class.getName());
-				        
+
 				            Language masterLanguage = LanguageController.getController().getMasterLanguage(db, siteNodeVersion.getOwningSiteNode().getRepository().getId());
 				            ContentVersion contentVersion = ContentVersionController.getContentVersionController().getLatestActiveContentVersion(content.getContentId(), masterLanguage.getId(), db);
 				            getComponents(siteNodeVersion, contentVersion.getVersionValue(), db);
 			                getComponentBindings(siteNodeVersion, contentVersion.getVersionValue(), db);
-			            
+
 				            /*
 				            Collection contentVersions = content.getContentVersions();
 				            Iterator contentVersionIterator = contentVersions.iterator();
@@ -607,30 +611,29 @@ public class RegistryController extends BaseController
 			            else if(name.equalsIgnoreCase("siteNodeId"))
 				        {
 			                SiteNode siteNode = SiteNodeController.getController().getSiteNodeWithId(new Integer(value), db);
-			                
+
 			                registryVO.setEntityId(value);
 				            registryVO.setEntityName(SiteNode.class.getName());
-				            
+
 				            registryVO.setReferencingEntityId(siteNodeVersion.getId().toString());
 				            registryVO.setReferencingEntityName(SiteNodeVersion.class.getName());
 				            registryVO.setReferencingEntityCompletingId(oldSiteNode.getId().toString());
 				            registryVO.setReferencingEntityCompletingName(SiteNode.class.getName());
 				        }
-			            
+
 			    	    logger.info("Before creating registry entry...");
-			    	    
+
 			            this.create(registryVO, db);
 	                }
 	                catch(Exception e)
 	                {
 	                    e.printStackTrace();
-	                }		        
+	                }
 			    }
 		    }
 		}
 	}
 
-	
 	/**
 	 * this method goes through all page bindings and makes registry entries for them
 	 * 
@@ -638,11 +641,12 @@ public class RegistryController extends BaseController
 	 * @throws SystemException
 	 * @throws Exception
 	 */
-	
+
+	@SuppressWarnings({ "unused", "rawtypes" })
 	public void getPageBindings(SiteNodeVersion siteNodeVersion, Database db) throws ConstraintException, SystemException, Exception
 	{
 	    SiteNode oldSiteNode = siteNodeVersion.getOwningSiteNode();
-	    
+
 		Collection serviceBindings = siteNodeVersion.getServiceBindings();
 		Iterator serviceBindingIterator = serviceBindings.iterator();
 		while(serviceBindingIterator.hasNext())
@@ -656,7 +660,7 @@ public class RegistryController extends BaseController
 			        Qualifyer qualifyer = (Qualifyer)qualifyersIterator.next();
 			        String name = qualifyer.getName();
 			        String value = qualifyer.getValue();
-	
+
 	                try
 	                {
 				        RegistryVO registryVO = new RegistryVO();
@@ -664,15 +668,15 @@ public class RegistryController extends BaseController
 			            if(name.equalsIgnoreCase("contentId"))
 				        {
 			                Content content = ContentController.getContentController().getContentWithId(new Integer(value), db);
-			            
+
 			                registryVO.setEntityId(value);
 				            registryVO.setEntityName(Content.class.getName());
-				            
+
 				            registryVO.setReferencingEntityId(siteNodeVersion.getId().toString());
 				            registryVO.setReferencingEntityName(SiteNodeVersion.class.getName());
 				            registryVO.setReferencingEntityCompletingId(oldSiteNode.getId().toString());
 				            registryVO.setReferencingEntityCompletingName(SiteNode.class.getName());
-				        
+
 				            /*
 				            Collection contentVersions = content.getContentVersions();
 				            Iterator contentVersionIterator = contentVersions.iterator();
@@ -687,16 +691,16 @@ public class RegistryController extends BaseController
 			            else if(name.equalsIgnoreCase("siteNodeId"))
 				        {
 			                SiteNode siteNode = SiteNodeController.getController().getSiteNodeWithId(new Integer(value), db);
-			                
+
 			                registryVO.setEntityId(value);
 				            registryVO.setEntityName(SiteNode.class.getName());
-				            
+
 				            registryVO.setReferencingEntityId(siteNodeVersion.getId().toString());
 				            registryVO.setReferencingEntityName(SiteNodeVersion.class.getName());
 				            registryVO.setReferencingEntityCompletingId(oldSiteNode.getId().toString());
 				            registryVO.setReferencingEntityCompletingName(SiteNode.class.getName());
 				        }
-			            
+
 			    	    logger.info("Before creating registry entry...");
 
 			            this.create(registryVO, db);
@@ -704,7 +708,7 @@ public class RegistryController extends BaseController
 	                catch(Exception e)
 	                {
 	                    e.printStackTrace();
-	                }		        
+	                }
 			    }
 		    }
 		}

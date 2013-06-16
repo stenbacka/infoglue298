@@ -32,6 +32,7 @@ import org.apache.log4j.Logger;
 import org.exolab.castor.jdo.Database;
 import org.exolab.castor.jdo.OQLQuery;
 import org.exolab.castor.jdo.QueryResults;
+import org.infoglue.cms.controllers.kernel.impl.simple.ContentController.DeleteContentParams;
 import org.infoglue.cms.entities.content.ContentVO;
 import org.infoglue.cms.entities.kernel.BaseEntityVO;
 import org.infoglue.cms.entities.management.Language;
@@ -108,10 +109,23 @@ public class RepositoryController extends BaseController
 			ContentVO contentVO = ContentControllerProxy.getController().getRootContentVO(repositoryVO.getRepositoryId(), userName, false);
 			if(contentVO != null)
 			{
+				DeleteContentParams deleteParams = new DeleteContentParams();
 				if(forceDelete)
-					ContentController.getContentController().delete(contentVO, db, true, true, true, infoGluePrincipal, true);
+				{
+					deleteParams.setSkipRelationCheck(true);
+					deleteParams.setSkipServiceBindings(true);
+					deleteParams.setForceDelete(true);
+					deleteParams.setExcludeReferencesInSite(true);
+					ContentController.getContentController().delete(contentVO, infoGluePrincipal, deleteParams, db);
+				}
 				else
-					ContentController.getContentController().delete(contentVO, infoGluePrincipal, true, db);
+				{
+					deleteParams.setSkipRelationCheck(false);
+					deleteParams.setSkipServiceBindings(false);
+					deleteParams.setForceDelete(false);
+					deleteParams.setExcludeReferencesInSite(true);
+					ContentController.getContentController().delete(contentVO, infoGluePrincipal, deleteParams, db);
+				}
 			}
 
 			deleteEntity(RepositoryImpl.class, repositoryVO.getRepositoryId(), db);

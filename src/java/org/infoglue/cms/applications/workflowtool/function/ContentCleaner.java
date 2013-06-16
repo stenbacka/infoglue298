@@ -58,7 +58,7 @@ public class ContentCleaner extends ContentFunction
 				}
 			
 				if(!hasPublishedVersion)
-					ContentController.getContentController().delete(getContentVO(), getPrincipal(), getDatabase());
+					ContentController.getContentController().delete(getContentVO(), getPrincipal(), null, getDatabase());
 			}
 		} 
 		catch(Exception e) 

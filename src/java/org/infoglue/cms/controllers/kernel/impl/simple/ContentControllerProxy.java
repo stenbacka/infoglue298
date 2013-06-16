@@ -292,24 +292,28 @@ public class ContentControllerProxy extends ContentController
 
 		return update(contentVO, contentTypeDefinitionId);
 	}   
-	
+
+	/**
+	 * Convenience method for {@link #acDelete(InfoGluePrincipal, ContentVO, DeleteContentParams)} which uses null for the
+	 * <em>params</em> argument.
+	 */
 	public void acDelete(InfoGluePrincipal infogluePrincipal, ContentVO contentVO) throws ConstraintException, SystemException, Bug, Exception
 	{
-		acDelete(infogluePrincipal, contentVO, false);
+		acDelete(infogluePrincipal, contentVO, null);
 	}
 
 	/**
-	 * This method deletes a content after first checking that the user has rights to edit it.
+	 * This method deletes a content (using {@link ContentController#delete(ContentVO, InfoGluePrincipal, DeleteContentParams)})
+	 * after first checking that the user has rights to delete it. The interception point checked is &quot;Content.Delete&quot;.
 	 */
-
-	public void acDelete(InfoGluePrincipal infogluePrincipal, ContentVO contentVO, boolean forceDelete) throws ConstraintException, SystemException, Bug, Exception
+	public void acDelete(InfoGluePrincipal infogluePrincipal, ContentVO contentVO, DeleteContentParams params) throws ConstraintException, SystemException, Bug, Exception
 	{
 		Map<String, Integer> hashMap = new HashMap<String, Integer>();
 		hashMap.put("contentId", contentVO.getId());
 
 		intercept(hashMap, "Content.Delete", infogluePrincipal);
 
-	    delete(contentVO, infogluePrincipal, forceDelete);
+		delete(contentVO, infogluePrincipal, params);
 	}
 
 	/**

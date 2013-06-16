@@ -532,15 +532,15 @@ public class CmsJDOCallback implements CallbackInterceptor
 					clearCache(SmallishContentImpl.class);
 					clearCache(MediumContentImpl.class);
 	
-					clearRegistryForReferencedEntity(object);
-					clearRegistryForReferencingEntityCompletingName(object);
+					clearRegistryForReferencedEntity(Content.class, object);
+					clearRegistryForReferencingEntityCompletingName(Content.class, object);
 				}
 				else if(object.getClass().getName().equals(ContentVersionImpl.class.getName()))
 				{
 					CacheController.clearCache("componentContentsCache");
 					clearCache(SmallContentVersionImpl.class);
 					clearCache(SmallestContentVersionImpl.class);
-	//				RegistryController.getController().clearRegistryForReferencingEntityName(ContentVersion.class.getName(), getObjectIdentity(object).toString());
+					clearRegistryForReferencedEntity(ContentVersion.class, object);
 				}
 				else if(object.getClass().getName().equals(RepositoryLanguageImpl.class.getName()))
 				{
@@ -557,13 +557,13 @@ public class CmsJDOCallback implements CallbackInterceptor
 				}
 				else if(object.getClass().getName().equals(SiteNodeImpl.class.getName()))
 				{
-				    RegistryController.getController().clearRegistryForReferencedEntity(SiteNode.class.getName(), getObjectIdentity(object).toString());
-					RegistryController.getController().clearRegistryForReferencingEntityCompletingName(SiteNode.class.getName(), getObjectIdentity(object).toString());
+					clearRegistryForReferencedEntity(SiteNode.class, object);
+					clearRegistryForReferencingEntityCompletingName(SiteNode.class, object);
 				}
 				else if(object.getClass().getName().equals(SiteNodeVersionImpl.class.getName()))
 				{
 					clearCache(SmallSiteNodeVersionImpl.class);
-					RegistryController.getController().clearRegistryForReferencingEntityName(SiteNodeVersion.class.getName(), getObjectIdentity(object).toString());
+					clearRegistryForReferencedEntity(SiteNodeVersion.class, object);
 				}
 				else if(object.getClass().getName().equals(WorkflowDefinitionImpl.class.getName()))
 				{
@@ -612,8 +612,6 @@ public class CmsJDOCallback implements CallbackInterceptor
 				{
 				    CacheController.clearCache("languageCache");
 				}
-	
-	
 	       	}
 	    }
     	catch (Throwable tr)
@@ -623,18 +621,17 @@ public class CmsJDOCallback implements CallbackInterceptor
     	}
     }
 
-	private void clearRegistryForReferencedEntity(Object object) throws SystemException, Exception, Bug
+	private void clearRegistryForReferencedEntity(Class<?> clazz, Object object) throws SystemException, Exception, Bug
 	{
 		Database db = CastorDatabaseService.getThreadDatabase();
-		RegistryController.getController().clearRegistryForReferencedEntity(Content.class.getName(), getObjectIdentity(object).toString(), db);
+		RegistryController.getController().clearRegistryForReferencedEntity(clazz.getName(), getObjectIdentity(object).toString(), db);
 	}
 
-	private void clearRegistryForReferencingEntityCompletingName(Object object) throws SystemException, Exception, Bug
+	private void clearRegistryForReferencingEntityCompletingName(Class<?> clazz, Object object) throws SystemException, Exception, Bug
 	{
 		Database db = CastorDatabaseService.getThreadDatabase();
-		RegistryController.getController().clearRegistryForReferencingEntityCompletingName(Content.class.getName(), getObjectIdentity(object).toString(), db);
+		RegistryController.getController().clearRegistryForReferencingEntityCompletingName(clazz.getName(), getObjectIdentity(object).toString(), db);
 	}
-
 
     public void releasing(Object object, boolean committed)
     {

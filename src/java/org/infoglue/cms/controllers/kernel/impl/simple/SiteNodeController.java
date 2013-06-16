@@ -210,7 +210,6 @@ public class SiteNodeController extends BaseController
 	{
 		Map<String, List<ReferenceBean>> contactPersons = new HashMap<String, List<ReferenceBean>>();
 		Database db = CastorDatabaseService.getThreadDatabase();
-        beginTransaction(db);
 		try
         {
 			delete(siteNodeVO, db, forceDelete, infogluePrincipal, contactPersons, false);
@@ -255,7 +254,6 @@ public class SiteNodeController extends BaseController
 	 * 
 	 * This method does not notify contact persons about the removal. Use {@link #markForDeletion(SiteNodeVO, InfoGluePrincipal, boolean)} if you want to notify people.
 	 */
-	    
 	public void delete(SiteNodeVO siteNodeVO, Database db, InfoGluePrincipal infogluePrincipal) throws ConstraintException, SystemException, Exception
 	{
 		delete(siteNodeVO, db, false, infogluePrincipal, null, false);
@@ -1681,7 +1679,7 @@ public class SiteNodeController extends BaseController
 		db.remove(siteNodeVersion);
 	}
 
- 	private Map<String, List<ReferenceBean>> groupByContactPerson(List<ReferenceBean> contactPersons)
+	private Map<String, List<ReferenceBean>> groupByContactPerson(List<ReferenceBean> contactPersons)
 	{
 		Map<String, List<ReferenceBean>> result = new HashMap<String, List<ReferenceBean>>();
 
@@ -1689,27 +1687,38 @@ public class SiteNodeController extends BaseController
 		{
 			if (referenceBean.getContactPersonEmail() != null && !referenceBean.getContactPersonEmail().equals(""))
 			{
-				List<ReferenceBean> personsList = result.get(referenceBean.getContactPersonEmail());
-				if (personsList == null)
+				logger.debug("Found contact person on reference for " + referenceBean.getPath() + ". Person: " + referenceBean.getContactPersonEmail());
+				addReferenceToContactPersonList(result, referenceBean, referenceBean.getContactPersonEmail());
+			}
+			for (ReferenceVersionBean referenceVersion : referenceBean.getVersions())
+			{
+				if (referenceVersion.getContactPersonEmail() != null && !referenceVersion.getContactPersonEmail().equals(""))
 				{
-					personsList = new ArrayList<ReferenceBean>();
-					result.put(referenceBean.getContactPersonEmail(), personsList);
+					logger.debug("Found contact person on reference version for " + referenceBean.getPath() + ". Person: " + referenceVersion.getContactPersonEmail());
+					addReferenceToContactPersonList(result, referenceBean, referenceVersion.getContactPersonEmail());
+					break; // Don't add the ReferenceBean for every version.
 				}
-				personsList.add(referenceBean);
 			}
 			for (String concernedPerson : referenceBean.getConcernedPeople())
 			{
-				List<ReferenceBean> personsList = result.get(concernedPerson);
-				if (personsList == null)
-				{
-					personsList = new ArrayList<ReferenceBean>();
-					result.put(concernedPerson, personsList);
-				}
-				personsList.add(referenceBean);
+				logger.debug("Found concerned person for " + referenceBean.getPath() + ". Person: " + concernedPerson);
+				addReferenceToContactPersonList(result, referenceBean, concernedPerson);
 			}
 		}
 
 		return result;
+	}
+
+ 	private void addReferenceToContactPersonList(Map<String, List<ReferenceBean>> result, ReferenceBean referenceBean, String person)
+	{
+		List<ReferenceBean> personsList = result.get(person);
+		if (personsList == null)
+		{
+			logger.debug("First reference for person: " + person);
+			personsList = new ArrayList<ReferenceBean>();
+			result.put(person, personsList);
+		}
+		personsList.add(referenceBean);
 	}
 
 	private Map<String, Map<String, List<ReferenceBean>>> groupByContactPerson(Map<String, List<ReferenceBean>> contactPersons)
@@ -1725,8 +1734,13 @@ public class SiteNodeController extends BaseController
 				Map<String, List<ReferenceBean>> value = result.get(contactPerson);
 				if (value == null)
 				{
+					logger.debug("First instance of contact person: " + contactPerson);
 					value = new HashMap<String, List<ReferenceBean>>();
 					result.put(contactPerson, value);
+				}
+				if (logger.isDebugEnabled())
+				{
+					logger.debug("Putting value: " + contactsForSiteNode.getValue() + " for contact person: " + contactPerson);
 				}
 				value.put(siteNodePath, contactsForSiteNode.getValue());
 			}
@@ -1818,7 +1832,9 @@ public class SiteNodeController extends BaseController
 										url = CmsPropertyHandler.getCmsFullBaseUrl() + "/ViewCMSTool.action?contentId=" + contentVersionVO.getContentId() + "&languageId=" + contentVersionVO.getLanguageId();
 										contentBuilder.append("<li>");
 										contentBuilder.append("<a href=\"" + url + "\">");
-										contentBuilder.append(getLocalizedString(locale, "tool.structuretool.registry.notificationEmail.editLanguageVersion", contentVersionVO.getLanguageName()));
+										LanguageVO contentVersionLanguageVO = LanguageController.getController().getLanguageVOWithId(contentVersionVO.getLanguageId(), db);
+										Locale contentVersionLocale = new Locale(contentVersionLanguageVO.getLanguageCode());
+										contentBuilder.append(getLocalizedString(locale, "tool.structuretool.registry.notificationEmail.editLanguageVersion", contentVersionLocale.getDisplayLanguage(locale)));
 										contentBuilder.append("</a>");
 										if (reference.getConcernedPeople().size() > 0)
 										{

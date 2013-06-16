@@ -31,12 +31,9 @@ import org.infoglue.cms.applications.common.actions.InfoGlueAbstractAction;
 import org.infoglue.cms.applications.databeans.ReferenceBean;
 import org.infoglue.cms.controllers.kernel.impl.simple.ContentController;
 import org.infoglue.cms.controllers.kernel.impl.simple.ContentControllerProxy;
-import org.infoglue.cms.controllers.kernel.impl.simple.InconsistenciesController;
 import org.infoglue.cms.controllers.kernel.impl.simple.RegistryController;
-import org.infoglue.cms.controllers.kernel.impl.simple.SiteNodeController;
-import org.infoglue.cms.controllers.kernel.impl.simple.SiteNodeControllerProxy;
+import org.infoglue.cms.controllers.kernel.impl.simple.ContentController.DeleteContentParams;
 import org.infoglue.cms.entities.content.ContentVO;
-import org.infoglue.cms.util.CmsPropertyHandler;
 
 /**
  * This action removes a content from the system.
@@ -91,7 +88,9 @@ public class DeleteContentAction extends InfoGlueAbstractAction
 				logger.info("The siteNode must have been a root-siteNode because we could not find a parent.");
 			}
 
-			ContentControllerProxy.getController().acDelete(this.getInfoGluePrincipal(), this.contentVO, forceDelete);
+			DeleteContentParams params = new DeleteContentParams();
+			params.setForceDelete(forceDelete);
+			ContentControllerProxy.getController().acDelete(this.getInfoGluePrincipal(), this.contentVO, params);
 
 			return "success";
 	    }
@@ -107,24 +106,26 @@ public class DeleteContentAction extends InfoGlueAbstractAction
 		this.referenceBeanList = RegistryController.getController().getReferencingObjectsForContent(this.contentVO.getContentId());
 		if(this.referenceBeanList != null && this.referenceBeanList.size() > 0)
 		{
-		    return "showRelations";
+			return "showRelations";
 		}
-	    else
-	    {
-	    	try
+		else
+		{
+			try
 			{
 				this.parentContentId = ContentController.getParentContent(this.contentVO.getContentId()).getContentId();
 			}
 			catch(Exception e)
 			{
-			    logger.info("The content must have been a root-content because we could not find a parent.");
+				logger.info("The content must have been a root-content because we could not find a parent.");
 			}
 
-	    	ContentControllerProxy.getController().acDelete(this.getInfoGluePrincipal(), this.contentVO, false);
-			
-	    	return "successStandalone";
-	    }
-	}	
+			DeleteContentParams params = new DeleteContentParams();
+			params.setForceDelete(false);
+			ContentControllerProxy.getController().acDelete(this.getInfoGluePrincipal(), this.contentVO, params);
+
+			return "successStandalone";
+		}
+	}
 
 	public String doDeleteReference() throws Exception 
 	{
@@ -148,11 +149,6 @@ public class DeleteContentAction extends InfoGlueAbstractAction
 	    return "fixPageHeader";
 	}
 
-	public boolean getOnlyShowLatestReferenceIfLatestVersion()
-	{
-		return CmsPropertyHandler.getOnlyShowReferenceIfLatestVersion();
-	}
-
 	public void setContentId(Integer contentId)
 	{
 		this.contentVO.setContentId(contentId);
@@ -172,27 +168,27 @@ public class DeleteContentAction extends InfoGlueAbstractAction
 	{
 		return this.parentContentId;
 	}
-	
+
 	public Integer getOriginalContentId()
 	{
 		return this.contentVO.getContentId();
 	}
-	
+
 	public Integer getUnrefreshedContentId()
 	{
 		return this.parentContentId;
 	}
-	
+
 	public Integer getChangeTypeId()
 	{
 		return this.changeTypeId;
 	}
-        
+
     public String getErrorKey()
 	{
 		return "ContentVersion.stateId";
 	}
-	
+
 	public String getReturnAddress()
 	{
 		return "ViewContent.action?contentId=" + this.contentVO.getId() + "&repositoryId=" + this.contentVO.getRepositoryId();
@@ -202,22 +198,22 @@ public class DeleteContentAction extends InfoGlueAbstractAction
     {
         return referenceBeanList;
     }
-    
+
     public Integer getSiteNodeId()
     {
         return siteNodeId;
     }
-    
+
     public void setSiteNodeId(Integer siteNodeId)
     {
         this.siteNodeId = siteNodeId;
     }
-    
+
     public String[] getRegistryId()
     {
         return registryId;
     }
-    
+
     public void setRegistryId(String[] registryId)
     {
         this.registryId = registryId;

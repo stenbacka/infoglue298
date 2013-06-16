@@ -29,7 +29,6 @@ import java.util.List;
 import org.apache.log4j.Logger;
 import org.infoglue.cms.applications.common.actions.InfoGlueAbstractAction;
 import org.infoglue.cms.applications.databeans.ReferenceBean;
-import org.infoglue.cms.controllers.kernel.impl.simple.InconsistenciesController;
 import org.infoglue.cms.controllers.kernel.impl.simple.RegistryController;
 import org.infoglue.cms.controllers.kernel.impl.simple.SiteNodeController;
 import org.infoglue.cms.controllers.kernel.impl.simple.SiteNodeControllerProxy;
@@ -45,10 +44,11 @@ import org.infoglue.cms.util.CmsPropertyHandler;
 
 public class DeleteSiteNodeAction extends InfoGlueAbstractAction
 {
+	private static final long serialVersionUID = 1L;
     private final static Logger logger = Logger.getLogger(DeleteSiteNodeAction.class.getName());
 
 	private SiteNodeVO siteNodeVO;
-	private Integer siteNodeId;
+//	private Integer siteNodeId;
 	private Integer parentSiteNodeId;
 	private Integer changeTypeId;
 	private Integer repositoryId;
@@ -113,7 +113,6 @@ public class DeleteSiteNodeAction extends InfoGlueAbstractAction
 		return executeAction(true);
 	}
 
-	
 	public String doFixPage() throws Exception 
 	{
 	    return "fixPage";
@@ -122,11 +121,6 @@ public class DeleteSiteNodeAction extends InfoGlueAbstractAction
 	public String doFixPageHeader() throws Exception 
 	{
 	    return "fixPageHeader";
-	}
-	
-	public boolean getOnlyShowLatestReferenceIfLatestVersion()
-	{
-		return CmsPropertyHandler.getOnlyShowReferenceIfLatestVersion();
 	}
 
 	public void setSiteNodeId(Integer siteNodeId)
@@ -138,7 +132,7 @@ public class DeleteSiteNodeAction extends InfoGlueAbstractAction
 	{
 		return this.siteNodeVO.getSiteNodeId();
 	}
-	
+
 	public void setParentSiteNodeId(Integer parentSiteNodeId)
 	{
 		this.parentSiteNodeId = parentSiteNodeId;
@@ -153,59 +147,64 @@ public class DeleteSiteNodeAction extends InfoGlueAbstractAction
 	{
 		return this.parentSiteNodeId;
 	}
-	
+
 	public Integer getUnrefreshedSiteNodeId()
 	{
 		return this.parentSiteNodeId;
 	}
-	
+
 	public Integer getChangeTypeId()
 	{
 		return this.changeTypeId;
 	}
-        
+
 	public String getErrorKey()
 	{
 		return "SiteNodeVersion.stateId";
 	}
-	
+
 	public String getReturnAddress()
 	{
 		return "ViewSiteNode.action?siteNodeId=" + this.siteNodeVO.getId() + "&repositoryId=" + this.siteNodeVO.getRepositoryId();
 	}
-	
+
     public Integer getRepositoryId()
     {
         return repositoryId;
     }
-    
+
     public void setRepositoryId(Integer repositoryId)
     {
         this.repositoryId = repositoryId;
     }
-    
+
     public Integer getContentId()
     {
         return contentId;
     }
-    
+
     public void setContentId(Integer contentId)
     {
         this.contentId = contentId;
     }
-    
+
     public List<ReferenceBean> getReferenceBeanList()
     {
         return referenceBeanList;
     }
-    
+
     public String[] getRegistryId()
     {
         return registryId;
     }
-    
+
     public void setRegistryId(String[] registryId)
     {
         this.registryId = registryId;
+    }
+
+    public boolean getNotifyResponsibleOnReferenceChange()
+    {
+    	return CmsPropertyHandler.getNotifyResponsibleOnReferenceChange();
     }
 }

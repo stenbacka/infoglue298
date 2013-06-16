@@ -51,6 +51,7 @@ import org.infoglue.cms.controllers.kernel.impl.simple.InterceptionPointControll
 import org.infoglue.cms.controllers.kernel.impl.simple.PublicationController;
 import org.infoglue.cms.controllers.kernel.impl.simple.ServerNodeController;
 import org.infoglue.cms.controllers.kernel.impl.simple.UserControllerProxy;
+import org.infoglue.cms.controllers.kernel.impl.simple.ContentController.DeleteContentParams;
 import org.infoglue.cms.entities.content.Content;
 import org.infoglue.cms.entities.content.ContentVO;
 import org.infoglue.cms.entities.content.ContentVersion;
@@ -1074,9 +1075,11 @@ public class RemoteContentServiceImpl extends RemoteInfoGlueService
 			    publicationVO.setRepositoryId(currentContentVO.getRepositoryId());
 			    publicationVO = PublicationController.getController().createAndPublish(publicationVO, events, true, this.principal);
             }
-			
-			ContentController.getContentController().delete(contentVO, principal, forceDelete.booleanValue());
-               
+
+            ContentController.DeleteContentParams deleteParams = new DeleteContentParams();
+            deleteParams.setForceDelete(forceDelete.booleanValue());
+			ContentController.getContentController().delete(contentVO, principal, deleteParams);
+
 	        logger.info("Done with contents..");
 
         }

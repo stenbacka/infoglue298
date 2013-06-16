@@ -311,34 +311,74 @@ public class ContentController extends BaseController
         }
         
         return content;
-    }
+	}
 
-
-	/**
-	 * This method deletes a content and also erases all the children and all versions.
-	 */
-
-    public void delete(ContentVO contentVO, InfoGluePrincipal infogluePrincipal) throws ConstraintException, SystemException
-    {
-    	delete(contentVO, infogluePrincipal, false);
-    }
-
-	/**
-	 * This method deletes a content and also erases all the children and all versions.
-	 */
-
-	public void delete(ContentVO contentVO, InfoGluePrincipal infogluePrincipal, boolean forceDelete) throws ConstraintException, SystemException
+	public static class DeleteContentParams
 	{
+		private boolean skipRelationCheck = false;
+		private boolean skipServiceBindings = false;
+		private boolean forceDelete = false;
+		private boolean excludeReferencesInSite = false;
+		private boolean notifyResponsibleOnReferenceChange = CmsPropertyHandler.getNotifyResponsibleOnReferenceChange();
+		private Map<String, List<ReferenceBean>> contactPersons = null;
+
+		public void setSkipRelationCheck(boolean skipRelationCheck)
+		{
+			this.skipRelationCheck = skipRelationCheck;
+		}
+		public void setSkipServiceBindings(boolean skipServiceBindings)
+		{
+			this.skipServiceBindings = skipServiceBindings;
+		}
+		public void setForceDelete(boolean forceDelete)
+		{
+			this.forceDelete = forceDelete;
+		}
+		public void setExcludeReferencesInSite(boolean excludeReferencesInSite)
+		{
+			this.excludeReferencesInSite = excludeReferencesInSite;
+		}
+		public void setNotifyResponsibleOnReferenceChange(boolean notifyResponsibleOnReferenceChange)
+		{
+			this.notifyResponsibleOnReferenceChange = notifyResponsibleOnReferenceChange;
+		}
+		public void setContactPersons(Map<String, List<ReferenceBean>> contactPersons)
+		{
+			this.contactPersons = contactPersons;
+		}
+	}
+
+	/**
+	 * Convenience method for deleting a Content. Will call {@link #delete(ContentVO, InfoGluePrincipal, DeleteContentParams)} with
+	 * all {@link DeleteContentParams} set to default values.
+	 * @param contentVO The content to delete
+	 * @param The user who performs the delete operation. The principal will be used for access checking and 
+	 */
+	public void delete(ContentVO contentVO, InfoGluePrincipal infogluePrincipal) throws ConstraintException, SystemException
+	{
+		delete(contentVO, infogluePrincipal, null);
+	}
+
+
+	/**
+	 * This method deletes a content and also erases all the children and all versions.
+	 */
+	public void delete(ContentVO contentVO, InfoGluePrincipal infogluePrincipal, DeleteContentParams params) throws ConstraintException, SystemException
+	{
+		if (params == null)
+		{
+			params = new DeleteContentParams();
+		}
 		// The key in contactPersons will be Content paths
 		Map<String, List<ReferenceBean>> contactPersons = new HashMap<String, List<ReferenceBean>>();
+		params.contactPersons = contactPersons;
 		Database db = CastorDatabaseService.getThreadDatabase();
 		beginTransaction(db);
 		try
 		{
-			delete(contentVO, db, false, false, forceDelete, infogluePrincipal, contactPersons, false);
+			delete(contentVO, infogluePrincipal, params, db);
 
 			commitThreadTransaction();
-
 		}
 		catch(ConstraintException ce)
 		{
@@ -378,27 +418,30 @@ public class ContentController extends BaseController
 	 * This method deletes a content and also erases all the children and all versions.
 	 */
 
-	public void delete(ContentVO contentVO, InfoGluePrincipal infogluePrincipal, Database db) throws ConstraintException, SystemException, Exception
-	{
-	    delete(contentVO, db, false, false, false, infogluePrincipal, new HashMap<String, List<ReferenceBean>>(), false);
-	}
-
-	public void delete(ContentVO contentVO, InfoGluePrincipal infogluePrincipal, boolean excludeReferencesInSite, Database db) throws ConstraintException, SystemException, Exception
-	{
-		delete(contentVO, db, false, false, false, infogluePrincipal, new HashMap<String, List<ReferenceBean>>(), excludeReferencesInSite);
-	}
-
-	public void delete(ContentVO contentVO, Database db, boolean skipRelationCheck, boolean skipServiceBindings, boolean forceDelete, InfoGluePrincipal infogluePrincipal, boolean excludeReferencesInSite) throws ConstraintException, SystemException, Exception
-	{
-		delete(contentVO, db, skipRelationCheck, skipServiceBindings, forceDelete, infogluePrincipal, new HashMap<String, List<ReferenceBean>>(), excludeReferencesInSite);
-	}
+//	public void delete(ContentVO contentVO, InfoGluePrincipal infogluePrincipal, Database db) throws ConstraintException, SystemException, Exception
+//	{
+//	    delete(contentVO, db, false, false, false, infogluePrincipal, new HashMap<String, List<ReferenceBean>>(), false);
+//	}
+//
+//	public void delete(ContentVO contentVO, InfoGluePrincipal infogluePrincipal, boolean excludeReferencesInSite, Database db) throws ConstraintException, SystemException, Exception
+//	{
+//		delete(contentVO, db, false, false, false, infogluePrincipal, new HashMap<String, List<ReferenceBean>>(), excludeReferencesInSite);
+//	}
+//
+//	public void delete(ContentVO contentVO, Database db, boolean skipRelationCheck, boolean skipServiceBindings, boolean forceDelete, InfoGluePrincipal infogluePrincipal, boolean excludeReferencesInSite) throws ConstraintException, SystemException, Exception
+//	{
+//		delete(contentVO, db, skipRelationCheck, skipServiceBindings, forceDelete, infogluePrincipal, new HashMap<String, List<ReferenceBean>>(), excludeReferencesInSite);
+//	}
 
 	/**
 	 * This method deletes a content and also erases all the children and all versions.
 	 */
-
-	public /*synchronized*/ void delete(ContentVO contentVO, Database db, boolean skipRelationCheck, boolean skipServiceBindings, boolean forceDelete, InfoGluePrincipal infogluePrincipal, Map<String, List<ReferenceBean>> contactPersons, boolean excludeReferencesInSite) throws ConstraintException, SystemException, Exception
+	public void delete(ContentVO contentVO, InfoGluePrincipal infogluePrincipal, DeleteContentParams params, Database db) throws ConstraintException, SystemException, Exception
 	{
+		if (params == null)
+		{
+			params = new DeleteContentParams();
+		}
 		Content content = null;
 		try
 		{
@@ -410,8 +453,6 @@ public class ContentController extends BaseController
 			return;
 		}
 
-		boolean notifyResponsibleOnReferenceChange = CmsPropertyHandler.getNotifyResponsibleOnReferenceChange();
-
 		Content parent = content.getParentContent();
 		if(parent != null)
 		{
@@ -420,13 +461,14 @@ public class ContentController extends BaseController
 			{
 				//db.lock(controller);
 			*/	
-				Iterator childContentIterator = parent.getChildren().iterator();
+				@SuppressWarnings("unchecked")
+				Iterator<Content> childContentIterator = parent.getChildren().iterator();
 				while(childContentIterator.hasNext())
 				{
-				    Content candidate = (Content)childContentIterator.next();
+				    Content candidate = childContentIterator.next();
 				    if(candidate.getId().equals(contentVO.getContentId()))
 				    {
-				        deleteRecursive(content, childContentIterator, db, skipRelationCheck, skipServiceBindings, forceDelete, infogluePrincipal, contactPersons, notifyResponsibleOnReferenceChange, excludeReferencesInSite);
+				        deleteRecursive(content, childContentIterator, infogluePrincipal, params, db);
 				    }
 				}
 			/*
@@ -435,20 +477,21 @@ public class ContentController extends BaseController
 		}
 		else
 		{
-		    deleteRecursive(content, null, db, skipRelationCheck, skipServiceBindings, forceDelete, infogluePrincipal, contactPersons, notifyResponsibleOnReferenceChange, excludeReferencesInSite);
+		    deleteRecursive(content, null, infogluePrincipal, params, db);
 		}
 	}
 
 	/**
 	 * Recursively deletes all contents and their versions. Also updates related entities about the change.
+	 * @param params TODO
 	 */
 
-    private void deleteRecursive(Content content, Iterator parentIterator, Database db, boolean skipRelationCheck, boolean skipServiceBindings, boolean forceDelete, InfoGluePrincipal infogluePrincipal, Map<String, List<ReferenceBean>> contactPersons, boolean notifyResponsibleOnReferenceChange, boolean excludeReferencesInSite) throws ConstraintException, SystemException, Exception
+    private void deleteRecursive(Content content, Iterator<Content> parentIterator, InfoGluePrincipal infogluePrincipal, DeleteContentParams params, Database db) throws ConstraintException, SystemException, Exception
     {
-    	List<ReferenceBean> referenceBeanList = RegistryController.getController().getReferencingObjectsForContent(content.getContentId(), -1, true, excludeReferencesInSite, db);
-        if(!skipRelationCheck)
+    	List<ReferenceBean> referenceBeanList = RegistryController.getController().getReferencingObjectsForContent(content.getContentId(), -1, true, params.excludeReferencesInSite, db);
+        if(!params.skipRelationCheck)
         {
-			if(referenceBeanList != null && referenceBeanList.size() > 0 && !forceDelete)
+			if(referenceBeanList != null && referenceBeanList.size() > 0 && !params.forceDelete)
 				throw new ConstraintException("ContentVersion.stateId", "3305");
         }
 
@@ -458,36 +501,36 @@ public class ContentController extends BaseController
 		while(childrenIterator.hasNext())
 		{
 			Content childContent = (Content)childrenIterator.next();
-			deleteRecursive(childContent, childrenIterator, db, skipRelationCheck, skipServiceBindings, forceDelete, infogluePrincipal, contactPersons, notifyResponsibleOnReferenceChange, excludeReferencesInSite);
+			deleteRecursive(childContent, childrenIterator, infogluePrincipal, params, db);
    		}
-		content.setChildren(new ArrayList());
+		content.setChildren(new ArrayList<Content>());
 
 		boolean isDeletable = getIsDeletable(content, infogluePrincipal, db);
-		if(forceDelete || isDeletable)
+		if(params.forceDelete || isDeletable)
 		{
-			ContentVersionController.getContentVersionController().deleteVersionsForContent(content, db, forceDelete, infogluePrincipal);
+			ContentVersionController.getContentVersionController().deleteVersionsForContent(content, db, params.forceDelete, infogluePrincipal);
 
-			if(!skipServiceBindings)
+			if(!params.skipServiceBindings)
 			    ServiceBindingController.deleteServiceBindingsReferencingContent(content, db);
 
-			if (!notifyResponsibleOnReferenceChange)
+			if (!params.notifyResponsibleOnReferenceChange)
 			{
 				RegistryController.getController().cleanAllForContent(content.getContentId(), infogluePrincipal, db);
 			}
-			if (notifyResponsibleOnReferenceChange)
+			if (params.notifyResponsibleOnReferenceChange)
 			{
 				if (referenceBeanList != null)
 				{
-					contactPersons.put(getContentPath(content.getValueObject(), false, true, db), referenceBeanList);
+					params.contactPersons.put(getContentPath(content.getValueObject(), false, true, db), referenceBeanList);
 				}
 			}
 
-			if(parentIterator != null) 
+			if(parentIterator != null)
 			    parentIterator.remove();
 
 	    	db.remove(content);
 
-            Map args = new HashMap();
+            Map<String, String> args = new HashMap<String, String>();
             args.put("globalKey", "infoglue");
             PropertySet ps = PropertySetManager.getInstance("jdbc", args);
 
@@ -1472,9 +1515,9 @@ public class ContentController extends BaseController
 	 * This method returns the bound contents based on a servicebinding.
 	 */
 	
-	public static List getBoundContents(Database db, Integer serviceBindingId) throws SystemException, Exception
+	public static List<ContentVO> getBoundContents(Database db, Integer serviceBindingId) throws SystemException, Exception
 	{
-		List result = new ArrayList();
+		List<ContentVO> result = new ArrayList<ContentVO>();
 		
 		ServiceBinding serviceBinding = ServiceBindingController.getServiceBindingWithId(serviceBindingId, db);
         
@@ -1512,12 +1555,12 @@ public class ContentController extends BaseController
 					while(i.hasNext())
 					{
 						ContentVO candidate = (ContentVO)i.next();
-						result.add(candidate);        		
+						result.add(candidate);
 					}
 				}
 			}
 		}
-	       	  		
+
 		return result;
 	}
 
@@ -2097,7 +2140,6 @@ public class ContentController extends BaseController
 
 		for (ReferenceBean referenceBean : contactPersons)
 		{
-			// Normally content reference beans don't store contact person on the reference (they store it on the referenceVersion) but we check anyway
 			if (referenceBean.getContactPersonEmail() != null && !referenceBean.getContactPersonEmail().equals(""))
 			{
 				logger.debug("Found contact person on reference for " + referenceBean.getPath() + ". Person: " + referenceBean.getContactPersonEmail());
