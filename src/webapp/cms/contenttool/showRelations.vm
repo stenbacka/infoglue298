@@ -104,7 +104,12 @@
 	</tr>
 	<tr>
 		<td colspan="7">
-			<a href="DeleteContent!deleteAllReferences.action?contentId=$originalContentId">$ui.getString("tool.structuretool.removeAllReferences")</a>
+			#if( $notifyResponsibleOnReferenceChange )
+				#set( $forceDeleteMessage = $ui.getString("tool.structuretool.removeAndNotifyAllReferences") )
+			#else
+				#set( $forceDeleteMessage = $ui.getString("tool.structuretool.removeAndCleanAllReferences") )
+			#end
+			<a href="DeleteContent!deleteAllReferences.action?contentId=$originalContentId">$!forceDeleteMessage</a>
 		</td>
 	</tr>
 

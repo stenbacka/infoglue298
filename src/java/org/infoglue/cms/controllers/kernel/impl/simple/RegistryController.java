@@ -43,7 +43,6 @@ import org.exolab.castor.jdo.OQLQuery;
 import org.exolab.castor.jdo.QueryResults;
 import org.infoglue.cms.applications.databeans.ReferenceBean;
 import org.infoglue.cms.applications.databeans.ReferenceVersionBean;
-import org.infoglue.cms.applications.databeans.RelationReferenceBean;
 import org.infoglue.cms.entities.content.Content;
 import org.infoglue.cms.entities.content.ContentVO;
 import org.infoglue.cms.entities.content.ContentVersion;
@@ -1175,13 +1174,18 @@ public class RegistryController extends BaseController
 
 		List<RegistryVO> registryEntires = getMatchingRegistryVOList(Content.class.getName(), contentId.toString(), maxRows, db);
 		Iterator<RegistryVO> registryEntiresIterator = registryEntires.iterator();
-		ContentVO contentVO = ContentController.getContentController().getContentVOWithId(contentId, db);
-		RepositoryVO repositoryVO = RepositoryController.getController().getRepositoryVOWithId(contentVO.getRepositoryId(), db);
+		Integer repositoryId = null;
+		if (excludeRepositoryInternalReferences)
+		{
+			ContentVO contentVO = ContentController.getContentController().getContentVOWithId(contentId, db);
+			RepositoryVO repositoryVO = RepositoryController.getController().getRepositoryVOWithId(contentVO.getRepositoryId(), db);
+			repositoryId = repositoryVO.getRepositoryId();
+		}
 		while(registryEntiresIterator.hasNext())
 		{
             RegistryVO registryVO = registryEntiresIterator.next();
             logger.info("registryVO:" + registryVO.getReferencingEntityId() + ":" +  registryVO.getReferencingEntityCompletingId());
-            ReferenceBean referenceBean = getReferenceBeanFromRegistryVO(registryVO, entries, checkedLanguageVersions, repositoryVO.getRepositoryId(), db);
+            ReferenceBean referenceBean = getReferenceBeanFromRegistryVO(registryVO, entries, checkedLanguageVersions, repositoryId, db);
             if (referenceBean != null)
             {
             	referenceBeanList.add(referenceBean);

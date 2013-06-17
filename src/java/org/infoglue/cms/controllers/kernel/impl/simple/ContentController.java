@@ -373,7 +373,6 @@ public class ContentController extends BaseController
 		Map<String, List<ReferenceBean>> contactPersons = new HashMap<String, List<ReferenceBean>>();
 		params.contactPersons = contactPersons;
 		Database db = CastorDatabaseService.getThreadDatabase();
-		beginTransaction(db);
 		try
 		{
 			delete(contentVO, infogluePrincipal, params, db);
@@ -2300,7 +2299,7 @@ public class ContentController extends BaseController
 								{
 									ContentVersionVO version = (ContentVersionVO)versionBean.getReferencingObject();
 									languageId = version.getLanguageId();
-									url = CmsPropertyHandler.getCmsFullBaseUrl() + "/ViewCMSTool.action?contentId=" + ((ContentVO)reference.getReferencingCompletingObject()).getContentId() + "&languageId=" + languageId;
+									url = CmsPropertyHandler.getCmsFullBaseUrl() + "/ViewContentVersion!standalone.action?contentId=" + ((ContentVO)reference.getReferencingCompletingObject()).getContentId() + "&languageId=" + languageId;
 									contentBuilder.append("<li><a href=\"" + url + "\">" + path + "</a> (" + version.getLanguageName() + ")</li>");
 								}
 							}
@@ -2308,7 +2307,7 @@ public class ContentController extends BaseController
 						else
 						{
 							logger.info("Found SiteNode reference bean for path: " + contentPath + ". Reference path: " + path);
-							url = CmsPropertyHandler.getCmsFullBaseUrl() + "/Admin.action?siteNodeId=" + ((SiteNodeVO)reference.getReferencingCompletingObject()).getSiteNodeId();
+							url = CmsPropertyHandler.getCmsFullBaseUrl() + "/DeleteContent!fixPage.action?siteNodeId=" + ((SiteNodeVO)reference.getReferencingCompletingObject()).getSiteNodeId() + "&contentId=-1";
 							siteNodeBuilder.append("<li><a href=\"" + url + "\">" + path + "</a></li>");
 						}
 					}
