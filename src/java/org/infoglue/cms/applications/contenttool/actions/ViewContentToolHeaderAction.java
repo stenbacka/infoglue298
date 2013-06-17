@@ -27,8 +27,11 @@ import java.util.List;
 
 import javax.servlet.http.Cookie;
 
+import org.apache.log4j.Logger;
 import org.infoglue.cms.applications.common.actions.InfoGlueAbstractAction;
+import org.infoglue.cms.controllers.kernel.impl.simple.ContentController;
 import org.infoglue.cms.controllers.kernel.impl.simple.RepositoryController;
+import org.infoglue.cms.entities.content.ContentVO;
 import org.infoglue.cms.entities.management.RepositoryVO;
 import org.infoglue.cms.util.CmsPropertyHandler;
 
@@ -42,12 +45,14 @@ import org.infoglue.cms.util.CmsPropertyHandler;
 public class ViewContentToolHeaderAction extends InfoGlueAbstractAction
 {
 	private static final long serialVersionUID = 1L;
+	private static final Logger logger = Logger.getLogger(ViewContentToolHeaderAction.class);
 	
     private String tree;
     private String showVersions;
     private String exp=""; // for html tree support to start expanded
     
     private Integer repositoryId;
+    private Integer contentId;
      
 	private List repositories;
     
@@ -100,6 +105,19 @@ public class ViewContentToolHeaderAction extends InfoGlueAbstractAction
 		    	
 		this.repositories = RepositoryController.getController().getAuthorizedRepositoryVOList(this.getInfoGluePrincipal(), false);
 
+		if (contentId != null)
+		{
+			try
+			{
+				ContentVO contentVO = ContentController.getContentController().getContentVOWithId(contentId);
+				this.repositoryId = contentVO.getRepositoryId();
+			}
+			catch (Exception ex)
+			{
+				logger.warn("Error when trying to find content for repository selection for repository dropdown. Content-id: " + contentId + ". Message: " + ex.getMessage());
+			}
+		}
+
         return "success";
     }
     
@@ -147,6 +165,7 @@ public class ViewContentToolHeaderAction extends InfoGlueAbstractAction
 	{
 		try
     	{
+
 	    	if(this.repositoryId == null)
 	    	{	
 	    		this.repositoryId = (Integer)getHttpSession().getAttribute("repositoryId");
@@ -239,4 +258,13 @@ public class ViewContentToolHeaderAction extends InfoGlueAbstractAction
 		this.exp = exp;
 	}
 
+	public Integer getContentId()
+	{
+		return contentId;
+	}
+
+	public void setContentId(Integer contentId)
+	{
+		this.contentId = contentId;
+	}
 }

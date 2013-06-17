@@ -25,14 +25,28 @@
 		{
 			//alert("top:" + top.frames["toolarea"].name);
 		    //alert("toolId:" + toolId);
+		    #if( "$!contentId" != "" )
+		      #set( $contentParameters = "?contentId=$!contentId" )
+		    #end
+		    // $contentParameters
+		    #if( "$!languageId" != "" && "$!contentParameters" != "" )
+		      #set( $contentParameters = "$contentParameters&languageId=$!languageId" )
+		    #end
+		    // $contentParameters
+		    #if( "$!siteNodeId" != "" )
+		      #set( $siteNodeParameters = "?siteNodeId=$!siteNodeId" )
+		    #end
+		    #if( "$!languageId" != "" && "$!siteNodeParameters" != "" )
+		      #set( $siteNodeParameters = "$siteNodeParameters&languageId=$!languageId" )
+		    #end
 		    if(toolId == 0)
 		    {
-		    	top.frames["toolarea"].location.href = "ViewContentTool.action";
-			    top.document.title = "Content - InfoGlue CMS";
+				top.frames["toolarea"].location.href = "ViewContentTool.action$!contentParameters";
+				top.document.title = "Content - InfoGlue CMS";
 		    }
 		    else if (toolId == 1)
 			{
-			    top.frames["toolarea"].location.href = "ViewStructureTool.action";
+			    top.frames["toolarea"].location.href = "ViewStructureTool.action$!siteNodeParameters";
 			    top.document.title = "Structure - InfoGlue CMS";
 			}
 			else if (toolId == 2)

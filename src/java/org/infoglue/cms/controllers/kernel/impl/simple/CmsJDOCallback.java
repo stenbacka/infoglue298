@@ -74,6 +74,7 @@ import org.infoglue.cms.entities.structure.impl.simple.SiteNodeVersionImpl;
 import org.infoglue.cms.entities.structure.impl.simple.SmallSiteNodeVersionImpl;
 import org.infoglue.cms.entities.workflow.impl.simple.WorkflowDefinitionImpl;
 import org.infoglue.cms.exception.Bug;
+import org.infoglue.cms.exception.SystemException;
 import org.infoglue.cms.security.InfoGluePrincipal;
 import org.infoglue.cms.util.ChangeNotificationController;
 import org.infoglue.cms.util.NotificationMessage;
@@ -125,6 +126,7 @@ public class CmsJDOCallback implements CallbackInterceptor
     public void storing(Object object, boolean modified) throws Exception
     {
 		//System.out.println("storing...:" + object + ":" + modified);
+		//Thread.dumpStack();
         // ( (Persistent) object ).jdoStore( modified );
    		
    		//logger.info("Should we store -------------->" + object + ":" + modified);
@@ -469,149 +471,167 @@ public class CmsJDOCallback implements CallbackInterceptor
 
     public void removed( Object object ) throws Exception
     {
-		//System.out.println("removed...:" + object);
+//		System.out.println("removed...:" + object);
+		//Thread.dumpStack();
         // ( (Persistent) object ).jdoAfterRemove();
         
-       	if (TransactionHistoryImpl.class.getName().indexOf(object.getClass().getName()) == -1 && 
-       		RegistryImpl.class.getName().indexOf(object.getClass().getName()) == -1 && 
-    		SubscriptionFilterImpl.class.getName().indexOf(object.getClass().getName()) == -1)
+    	try
 	    {
-       	    String userName = "SYSTEM";
-			try
-			{	
-				InfoGluePrincipal principal = InfoGlueAbstractAction.getSessionInfoGluePrincipal();
-				if(principal != null && principal.getName() != null)
-					userName = principal.getName();
-			} 
-			catch (NoClassDefFoundError e){}
-
-		    NotificationMessage notificationMessage = new NotificationMessage("CMSJDOCallback", object.getClass().getName(), userName, NotificationMessage.TRANS_DELETE, getObjectIdentity(object), object.toString());
-		    ChangeNotificationController.getInstance().addNotificationMessage(notificationMessage);
-			if(object.getClass().getName().indexOf("org.infoglue.cms.entities.management") > -1 && !object.getClass().getName().equals(RegistryImpl.class.getName()))
-			    RemoteCacheUpdater.getSystemNotificationMessages().add(notificationMessage);
-
-			if(object.getClass().getName().equals(RepositoryImpl.class.getName()))
-			{
-				CacheController.clearCache("repositoryCache");
-			}
-			else if(object.getClass().getName().equals(InterceptionPointImpl.class.getName()))
-			{
-				CacheController.clearCache("interceptionPointCache");
-				CacheController.clearCache("interceptorsCache");
-				CacheController.clearCache("authorizationCache");
-				CacheController.clearCache("personalAuthorizationCache");
-			}
-			else if(object.getClass().getName().equals(InterceptorImpl.class.getName()))
-			{
-				CacheController.clearCache("interceptionPointCache");
-				CacheController.clearCache("interceptorsCache");
-				CacheController.clearCache("authorizationCache");
-				CacheController.clearCache("personalAuthorizationCache");
-			}
-			else if(object.getClass().getName().equals(AccessRightImpl.class.getName()) || object.getClass().getName().equals(AccessRightRoleImpl.class.getName()) || object.getClass().getName().equals(AccessRightGroupImpl.class.getName()) || object.getClass().getName().equals(AccessRightUserImpl.class.getName()))
-			{
-				CacheController.clearCache("interceptionPointCache");
-				CacheController.clearCache("interceptorsCache");
-				CacheController.clearCache("authorizationCache");
-				CacheController.clearCache("personalAuthorizationCache");
-				CacheController.clearCache("componentContentsCache");
-			}
-			else if(object.getClass().getName().equals(ContentTypeDefinitionImpl.class.getName()))
-			{
-				CacheController.clearCache("contentTypeDefinitionCache");
-			}
-			else if(object.getClass().getName().equals(ContentImpl.class.getName()))
-			{
-				CacheController.clearCache("childContentCache");
-				clearCache(SmallContentImpl.class);
-				clearCache(SmallishContentImpl.class);
-				clearCache(MediumContentImpl.class);
-
-				RegistryController.getController().clearRegistryForReferencedEntity(Content.class.getName(), getObjectIdentity(object).toString());
-				RegistryController.getController().clearRegistryForReferencingEntityCompletingName(Content.class.getName(), getObjectIdentity(object).toString());
-			}
-			else if(object.getClass().getName().equals(ContentVersionImpl.class.getName()))
-			{
-				CacheController.clearCache("componentContentsCache");
-				clearCache(SmallContentVersionImpl.class);
-				clearCache(SmallestContentVersionImpl.class);
-				RegistryController.getController().clearRegistryForReferencingEntityName(ContentVersion.class.getName(), getObjectIdentity(object).toString());
-			}
-			else if(object.getClass().getName().equals(RepositoryLanguageImpl.class.getName()))
-			{
-				CacheController.clearCache("masterLanguageCache");
-				CacheController.clearCache("repositoryLanguageListCache");
-			}
-			else if(object.getClass().getName().equals(DigitalAssetImpl.class.getName()))
-			{
-				CacheController.clearCache("digitalAssetCache");
-				clearCache(SmallDigitalAssetImpl.class);
-				clearCache(MediumDigitalAssetImpl.class);
-				//logger.info("We should delete all images with digitalAssetId " + getObjectIdentity(object));
-				DigitalAssetController.deleteCachedDigitalAssets((Integer)getObjectIdentity(object));
-			}
-			else if(object.getClass().getName().equals(SiteNodeImpl.class.getName()))
-			{
-			    RegistryController.getController().clearRegistryForReferencedEntity(SiteNode.class.getName(), getObjectIdentity(object).toString());
-				RegistryController.getController().clearRegistryForReferencingEntityCompletingName(SiteNode.class.getName(), getObjectIdentity(object).toString());
-			}
-			else if(object.getClass().getName().equals(SiteNodeVersionImpl.class.getName()))
-			{
-				clearCache(SmallSiteNodeVersionImpl.class);
-				RegistryController.getController().clearRegistryForReferencingEntityName(SiteNodeVersion.class.getName(), getObjectIdentity(object).toString());
-			}
-			else if(object.getClass().getName().equals(WorkflowDefinitionImpl.class.getName()))
-			{
-				CacheController.clearCache("workflowCache");
-			}
-			else if(object.getClass().getName().equals(SystemUserImpl.class.getName()))
-			{
-				clearCache(SmallSystemUserImpl.class);
-				CacheController.clearCache("principalCache");
-				CacheController.clearCache("componentContentsCache");
-			}
-			else if(object.getClass().getName().equals(GroupImpl.class.getName()))
-			{
-				clearCache(SmallGroupImpl.class);
-				CacheController.clearCache("groupListCache");
-				CacheController.clearCache("componentContentsCache");
-			}
-			else if(object.getClass().getName().equals(RoleImpl.class.getName()))
-			{
-				clearCache(SmallRoleImpl.class);
-				CacheController.clearCache("roleListCache");
-				CacheController.clearCache("componentContentsCache");
-			}
-			else if(object.getClass().getName().equals(UserPropertiesImpl.class.getName()))
-			{
-			    CacheController.clearCache("principalPropertyValueCache");
-				CacheController.clearCache("relatedCategoriesCache");
-			}
-			else if(object.getClass().getName().equals(GroupPropertiesImpl.class.getName()))
-			{
-			    CacheController.clearCache("principalPropertyValueCache");
-				CacheController.clearCache("groupPropertiesCache");
-				CacheController.clearCache("relatedCategoriesCache");
-			}
-			else if(object.getClass().getName().equals(RolePropertiesImpl.class.getName()))
-			{
-			    CacheController.clearCache("principalPropertyValueCache");
-				CacheController.clearCache("rolePropertiesCache");
-				CacheController.clearCache("relatedCategoriesCache");
-			}
-			else if(object.getClass().getName().equals(AvailableServiceBindingImpl.class.getName()))
-			{
-			    CacheController.clearCache("availableServiceBindingCache");
-			}
-			else if(object.getClass().getName().equals(LanguageImpl.class.getName()))
-			{
-			    CacheController.clearCache("languageCache");
-			}
-
-
-       	}
+	       	if (TransactionHistoryImpl.class.getName().indexOf(object.getClass().getName()) == -1 && 
+	       		RegistryImpl.class.getName().indexOf(object.getClass().getName()) == -1 && 
+	    		SubscriptionFilterImpl.class.getName().indexOf(object.getClass().getName()) == -1)
+		    {
+	       	    String userName = "SYSTEM";
+				try
+				{	
+					InfoGluePrincipal principal = InfoGlueAbstractAction.getSessionInfoGluePrincipal();
+					if(principal != null && principal.getName() != null)
+						userName = principal.getName();
+				} 
+				catch (NoClassDefFoundError e){}
+	
+			    NotificationMessage notificationMessage = new NotificationMessage("CMSJDOCallback", object.getClass().getName(), userName, NotificationMessage.TRANS_DELETE, getObjectIdentity(object), object.toString());
+			    ChangeNotificationController.getInstance().addNotificationMessage(notificationMessage);
+				if(object.getClass().getName().indexOf("org.infoglue.cms.entities.management") > -1 && !object.getClass().getName().equals(RegistryImpl.class.getName()))
+				    RemoteCacheUpdater.getSystemNotificationMessages().add(notificationMessage);
+	
+				if(object.getClass().getName().equals(RepositoryImpl.class.getName()))
+				{
+					CacheController.clearCache("repositoryCache");
+				}
+				else if(object.getClass().getName().equals(InterceptionPointImpl.class.getName()))
+				{
+					CacheController.clearCache("interceptionPointCache");
+					CacheController.clearCache("interceptorsCache");
+					CacheController.clearCache("authorizationCache");
+					CacheController.clearCache("personalAuthorizationCache");
+				}
+				else if(object.getClass().getName().equals(InterceptorImpl.class.getName()))
+				{
+					CacheController.clearCache("interceptionPointCache");
+					CacheController.clearCache("interceptorsCache");
+					CacheController.clearCache("authorizationCache");
+					CacheController.clearCache("personalAuthorizationCache");
+				}
+				else if(object.getClass().getName().equals(AccessRightImpl.class.getName()) || object.getClass().getName().equals(AccessRightRoleImpl.class.getName()) || object.getClass().getName().equals(AccessRightGroupImpl.class.getName()) || object.getClass().getName().equals(AccessRightUserImpl.class.getName()))
+				{
+					CacheController.clearCache("interceptionPointCache");
+					CacheController.clearCache("interceptorsCache");
+					CacheController.clearCache("authorizationCache");
+					CacheController.clearCache("personalAuthorizationCache");
+					CacheController.clearCache("componentContentsCache");
+				}
+				else if(object.getClass().getName().equals(ContentTypeDefinitionImpl.class.getName()))
+				{
+					CacheController.clearCache("contentTypeDefinitionCache");
+				}
+				else if(object.getClass().getName().equals(ContentImpl.class.getName()))
+				{
+					CacheController.clearCache("childContentCache");
+					clearCache(SmallContentImpl.class);
+					clearCache(SmallishContentImpl.class);
+					clearCache(MediumContentImpl.class);
+	
+					clearRegistryForReferencedEntity(Content.class, object);
+					clearRegistryForReferencingEntityCompletingName(Content.class, object);
+				}
+				else if(object.getClass().getName().equals(ContentVersionImpl.class.getName()))
+				{
+					CacheController.clearCache("componentContentsCache");
+					clearCache(SmallContentVersionImpl.class);
+					clearCache(SmallestContentVersionImpl.class);
+					clearRegistryForReferencedEntity(ContentVersion.class, object);
+				}
+				else if(object.getClass().getName().equals(RepositoryLanguageImpl.class.getName()))
+				{
+					CacheController.clearCache("masterLanguageCache");
+					CacheController.clearCache("repositoryLanguageListCache");
+				}
+				else if(object.getClass().getName().equals(DigitalAssetImpl.class.getName()))
+				{
+					CacheController.clearCache("digitalAssetCache");
+					clearCache(SmallDigitalAssetImpl.class);
+					clearCache(MediumDigitalAssetImpl.class);
+					//logger.info("We should delete all images with digitalAssetId " + getObjectIdentity(object));
+					DigitalAssetController.deleteCachedDigitalAssets((Integer)getObjectIdentity(object));
+				}
+				else if(object.getClass().getName().equals(SiteNodeImpl.class.getName()))
+				{
+					clearRegistryForReferencedEntity(SiteNode.class, object);
+					clearRegistryForReferencingEntityCompletingName(SiteNode.class, object);
+				}
+				else if(object.getClass().getName().equals(SiteNodeVersionImpl.class.getName()))
+				{
+					clearCache(SmallSiteNodeVersionImpl.class);
+					clearRegistryForReferencedEntity(SiteNodeVersion.class, object);
+				}
+				else if(object.getClass().getName().equals(WorkflowDefinitionImpl.class.getName()))
+				{
+					CacheController.clearCache("workflowCache");
+				}
+				else if(object.getClass().getName().equals(SystemUserImpl.class.getName()))
+				{
+					clearCache(SmallSystemUserImpl.class);
+					CacheController.clearCache("principalCache");
+					CacheController.clearCache("componentContentsCache");
+				}
+				else if(object.getClass().getName().equals(GroupImpl.class.getName()))
+				{
+					clearCache(SmallGroupImpl.class);
+					CacheController.clearCache("groupListCache");
+					CacheController.clearCache("componentContentsCache");
+				}
+				else if(object.getClass().getName().equals(RoleImpl.class.getName()))
+				{
+					clearCache(SmallRoleImpl.class);
+					CacheController.clearCache("roleListCache");
+					CacheController.clearCache("componentContentsCache");
+				}
+				else if(object.getClass().getName().equals(UserPropertiesImpl.class.getName()))
+				{
+				    CacheController.clearCache("principalPropertyValueCache");
+					CacheController.clearCache("relatedCategoriesCache");
+				}
+				else if(object.getClass().getName().equals(GroupPropertiesImpl.class.getName()))
+				{
+				    CacheController.clearCache("principalPropertyValueCache");
+					CacheController.clearCache("groupPropertiesCache");
+					CacheController.clearCache("relatedCategoriesCache");
+				}
+				else if(object.getClass().getName().equals(RolePropertiesImpl.class.getName()))
+				{
+				    CacheController.clearCache("principalPropertyValueCache");
+					CacheController.clearCache("rolePropertiesCache");
+					CacheController.clearCache("relatedCategoriesCache");
+				}
+				else if(object.getClass().getName().equals(AvailableServiceBindingImpl.class.getName()))
+				{
+				    CacheController.clearCache("availableServiceBindingCache");
+				}
+				else if(object.getClass().getName().equals(LanguageImpl.class.getName()))
+				{
+				    CacheController.clearCache("languageCache");
+				}
+	       	}
+	    }
+    	catch (Throwable tr)
+    	{
+    		logger.error("An error occured when handling removed callback. Message: " + tr.getMessage());
+    		logger.warn("An error occured when handling removed callback.", tr);
+    	}
     }
 
+	private void clearRegistryForReferencedEntity(Class<?> clazz, Object object) throws SystemException, Exception, Bug
+	{
+		Database db = CastorDatabaseService.getThreadDatabase();
+		RegistryController.getController().clearRegistryForReferencedEntity(clazz.getName(), getObjectIdentity(object).toString(), db);
+	}
+
+	private void clearRegistryForReferencingEntityCompletingName(Class<?> clazz, Object object) throws SystemException, Exception, Bug
+	{
+		Database db = CastorDatabaseService.getThreadDatabase();
+		RegistryController.getController().clearRegistryForReferencingEntityCompletingName(clazz.getName(), getObjectIdentity(object).toString(), db);
+	}
 
     public void releasing(Object object, boolean committed)
     {

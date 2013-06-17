@@ -26,11 +26,14 @@ package org.infoglue.cms.controllers.kernel.impl.simple;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.log4j.Logger;
 import org.exolab.castor.jdo.Database;
@@ -38,6 +41,8 @@ import org.exolab.castor.jdo.OQLQuery;
 import org.exolab.castor.jdo.ObjectNotFoundException;
 import org.exolab.castor.jdo.QueryResults;
 import org.infoglue.cms.applications.contenttool.wizards.actions.CreateContentWizardInfoBean;
+import org.infoglue.cms.applications.databeans.ReferenceBean;
+import org.infoglue.cms.applications.databeans.ReferenceVersionBean;
 import org.infoglue.cms.entities.content.Content;
 import org.infoglue.cms.entities.content.ContentVO;
 import org.infoglue.cms.entities.content.ContentVersion;
@@ -66,7 +71,9 @@ import org.infoglue.cms.exception.ConstraintException;
 import org.infoglue.cms.exception.SystemException;
 import org.infoglue.cms.security.InfoGluePrincipal;
 import org.infoglue.cms.services.BaseService;
+import org.infoglue.cms.util.CmsPropertyHandler;
 import org.infoglue.cms.util.ConstraintExceptionBuffer;
+import org.infoglue.cms.util.mail.MailServiceFactory;
 import org.infoglue.deliver.applications.databeans.DeliveryContext;
 import org.infoglue.deliver.util.CacheController;
 import org.infoglue.deliver.util.Timer;
@@ -304,74 +311,147 @@ public class ContentController extends BaseController
         }
         
         return content;
-    }
-       
-
-	/**
-	 * This method deletes a content and also erases all the children and all versions.
-	 */
-	    
-    public void delete(ContentVO contentVO, InfoGluePrincipal infogluePrincipal) throws ConstraintException, SystemException
-    {
-    	delete(contentVO, infogluePrincipal, false);
-    }
-    
-	/**
-	 * This method deletes a content and also erases all the children and all versions.
-	 */
-	    
-    public void delete(ContentVO contentVO, InfoGluePrincipal infogluePrincipal, boolean forceDelete) throws ConstraintException, SystemException
-    {
-	    Database db = CastorDatabaseService.getDatabase();
-        beginTransaction(db);
-		try
-        {		
-	    	delete(contentVO, db, false, false, forceDelete, infogluePrincipal);
-	    	
-	    	commitTransaction(db);
-            
-        }
-        catch(ConstraintException ce)
-        {
-        	logger.warn("An error occurred so we should not complete the transaction:" + ce, ce);
-            rollbackTransaction(db);
-            throw ce;
-        }
-        catch(Exception e)
-        {
-            logger.error("An error occurred so we should not complete the transaction:" + e, e);
-            rollbackTransaction(db);
-            throw new SystemException(e.getMessage());
-        }
-
-    }  
-    
-
-	/**
-	 * This method deletes a content and also erases all the children and all versions.
-	 */
-	    
-	public void delete(ContentVO contentVO, InfoGluePrincipal infogluePrincipal, Database db) throws ConstraintException, SystemException, Exception
-	{
-	    delete(contentVO, db, false, false, false, infogluePrincipal);
 	}
-	
+
+	public static class DeleteContentParams
+	{
+		private boolean skipRelationCheck = false;
+		private boolean skipServiceBindings = false;
+		private boolean forceDelete = false;
+		private boolean excludeReferencesInSite = false;
+		private boolean notifyResponsibleOnReferenceChange = CmsPropertyHandler.getNotifyResponsibleOnReferenceChange();
+		private Map<String, List<ReferenceBean>> contactPersons = null;
+
+		public void setSkipRelationCheck(boolean skipRelationCheck)
+		{
+			this.skipRelationCheck = skipRelationCheck;
+		}
+		public void setSkipServiceBindings(boolean skipServiceBindings)
+		{
+			this.skipServiceBindings = skipServiceBindings;
+		}
+		public void setForceDelete(boolean forceDelete)
+		{
+			this.forceDelete = forceDelete;
+		}
+		public void setExcludeReferencesInSite(boolean excludeReferencesInSite)
+		{
+			this.excludeReferencesInSite = excludeReferencesInSite;
+		}
+		public void setNotifyResponsibleOnReferenceChange(boolean notifyResponsibleOnReferenceChange)
+		{
+			this.notifyResponsibleOnReferenceChange = notifyResponsibleOnReferenceChange;
+		}
+		public void setContactPersons(Map<String, List<ReferenceBean>> contactPersons)
+		{
+			this.contactPersons = contactPersons;
+		}
+	}
+
+	/**
+	 * Convenience method for deleting a Content. Will call {@link #delete(ContentVO, InfoGluePrincipal, DeleteContentParams)} with
+	 * all {@link DeleteContentParams} set to default values.
+	 * @param contentVO The content to delete
+	 * @param The user who performs the delete operation. The principal will be used for access checking and 
+	 */
+	public void delete(ContentVO contentVO, InfoGluePrincipal infogluePrincipal) throws ConstraintException, SystemException
+	{
+		delete(contentVO, infogluePrincipal, null);
+	}
+
+
 	/**
 	 * This method deletes a content and also erases all the children and all versions.
 	 */
-	    
-	public /*synchronized*/ void delete(ContentVO contentVO, Database db, boolean skipRelationCheck, boolean skipServiceBindings, boolean forceDelete, InfoGluePrincipal infogluePrincipal) throws ConstraintException, SystemException, Exception
+	public void delete(ContentVO contentVO, InfoGluePrincipal infogluePrincipal, DeleteContentParams params) throws ConstraintException, SystemException
 	{
+		if (params == null)
+		{
+			params = new DeleteContentParams();
+		}
+		// The key in contactPersons will be Content paths
+		Map<String, List<ReferenceBean>> contactPersons = new HashMap<String, List<ReferenceBean>>();
+		params.contactPersons = contactPersons;
+		Database db = CastorDatabaseService.getThreadDatabase();
+		try
+		{
+			delete(contentVO, infogluePrincipal, params, db);
+
+			commitThreadTransaction();
+		}
+		catch(ConstraintException ce)
+		{
+			logger.warn("An error occurred so we should not complete the transaction:" + ce, ce);
+			rollbackThreadTransaction();
+			throw ce;
+		}
+		catch(Exception e)
+		{
+			logger.error("An error occurred so we should not complete the transaction:" + e, e);
+			rollbackThreadTransaction();
+			throw new SystemException(e.getMessage());
+		}
+
+		if (contactPersons.size() > 0)
+		{
+			logger.info("Will notifiy people about Content removals. Number of nodes: " + contactPersons.size());
+			Database contactDb = CastorDatabaseService.getDatabase();
+			try
+			{
+				beginTransaction(contactDb);
+				notifyContactPersonsForContent(contactPersons, contactDb);
+				commitTransaction(contactDb);
+			}
+			catch(Exception ex)
+			{
+				rollbackTransaction(contactDb);
+				logger.error("An error occurred so we should not contact people about Content removal. Message: " + ex.getMessage());
+				logger.warn("An error occurred so we should not contact people about Content removal.", ex);
+				throw new SystemException(ex.getMessage());
+			}
+		}
+
+    }
+
+	/**
+	 * This method deletes a content and also erases all the children and all versions.
+	 */
+
+//	public void delete(ContentVO contentVO, InfoGluePrincipal infogluePrincipal, Database db) throws ConstraintException, SystemException, Exception
+//	{
+//	    delete(contentVO, db, false, false, false, infogluePrincipal, new HashMap<String, List<ReferenceBean>>(), false);
+//	}
+//
+//	public void delete(ContentVO contentVO, InfoGluePrincipal infogluePrincipal, boolean excludeReferencesInSite, Database db) throws ConstraintException, SystemException, Exception
+//	{
+//		delete(contentVO, db, false, false, false, infogluePrincipal, new HashMap<String, List<ReferenceBean>>(), excludeReferencesInSite);
+//	}
+//
+//	public void delete(ContentVO contentVO, Database db, boolean skipRelationCheck, boolean skipServiceBindings, boolean forceDelete, InfoGluePrincipal infogluePrincipal, boolean excludeReferencesInSite) throws ConstraintException, SystemException, Exception
+//	{
+//		delete(contentVO, db, skipRelationCheck, skipServiceBindings, forceDelete, infogluePrincipal, new HashMap<String, List<ReferenceBean>>(), excludeReferencesInSite);
+//	}
+
+	/**
+	 * This method deletes a content and also erases all the children and all versions.
+	 */
+	public void delete(ContentVO contentVO, InfoGluePrincipal infogluePrincipal, DeleteContentParams params, Database db) throws ConstraintException, SystemException, Exception
+	{
+		if (params == null)
+		{
+			params = new DeleteContentParams();
+		}
 		Content content = null;
 		try
 		{
 			content = getContentWithId(contentVO.getContentId(), db);
 		}
-		catch(SystemException e)
+		catch(SystemException ex)
 		{
+			logger.warn("Failed to get content for deletion. Maybe it has already been deleted. Content-id: " + contentVO.getContentId() + ". Message: " + ex.getMessage());
 			return;
 		}
-		
+
 		Content parent = content.getParentContent();
 		if(parent != null)
 		{
@@ -380,13 +460,14 @@ public class ContentController extends BaseController
 			{
 				//db.lock(controller);
 			*/	
-				Iterator childContentIterator = parent.getChildren().iterator();
+				@SuppressWarnings("unchecked")
+				Iterator<Content> childContentIterator = parent.getChildren().iterator();
 				while(childContentIterator.hasNext())
 				{
-				    Content candidate = (Content)childContentIterator.next();
+				    Content candidate = childContentIterator.next();
 				    if(candidate.getId().equals(contentVO.getContentId()))
 				    {
-				        deleteRecursive(content, childContentIterator, db, skipRelationCheck, skipServiceBindings, forceDelete, infogluePrincipal);
+				        deleteRecursive(content, childContentIterator, infogluePrincipal, params, db);
 				    }
 				}
 			/*
@@ -395,46 +476,60 @@ public class ContentController extends BaseController
 		}
 		else
 		{
-		    deleteRecursive(content, null, db, skipRelationCheck, skipServiceBindings, forceDelete, infogluePrincipal);
+		    deleteRecursive(content, null, infogluePrincipal, params, db);
 		}
-	}        
+	}
 
 	/**
 	 * Recursively deletes all contents and their versions. Also updates related entities about the change.
+	 * @param params TODO
 	 */
-	
-    private static void deleteRecursive(Content content, Iterator parentIterator, Database db, boolean skipRelationCheck, boolean skipServiceBindings, boolean forceDelete, InfoGluePrincipal infogluePrincipal) throws ConstraintException, SystemException, Exception
+
+    private void deleteRecursive(Content content, Iterator<Content> parentIterator, InfoGluePrincipal infogluePrincipal, DeleteContentParams params, Database db) throws ConstraintException, SystemException, Exception
     {
-        if(!skipRelationCheck)
+    	List<ReferenceBean> referenceBeanList = RegistryController.getController().getReferencingObjectsForContent(content.getContentId(), -1, true, params.excludeReferencesInSite, db);
+        if(!params.skipRelationCheck)
         {
-	        List referenceBeanList = RegistryController.getController().getReferencingObjectsForContent(content.getId(), -1, db);
-			if(referenceBeanList != null && referenceBeanList.size() > 0)
+			if(referenceBeanList != null && referenceBeanList.size() > 0 && !params.forceDelete)
 				throw new ConstraintException("ContentVersion.stateId", "3305");
         }
-        
-        Collection children = content.getChildren();
-		Iterator childrenIterator = children.iterator();
+
+        @SuppressWarnings("unchecked")
+		Collection<Content> children = content.getChildren();
+		Iterator<Content> childrenIterator = children.iterator();
 		while(childrenIterator.hasNext())
 		{
 			Content childContent = (Content)childrenIterator.next();
-			deleteRecursive(childContent, childrenIterator, db, skipRelationCheck, skipServiceBindings, forceDelete, infogluePrincipal);   			
+			deleteRecursive(childContent, childrenIterator, infogluePrincipal, params, db);
    		}
-		content.setChildren(new ArrayList());
-		
+		content.setChildren(new ArrayList<Content>());
+
 		boolean isDeletable = getIsDeletable(content, infogluePrincipal, db);
-   		if(forceDelete || isDeletable)
-	    {
-			ContentVersionController.getContentVersionController().deleteVersionsForContent(content, db, forceDelete, infogluePrincipal);    	
-			
-			if(!skipServiceBindings)
+		if(params.forceDelete || isDeletable)
+		{
+			ContentVersionController.getContentVersionController().deleteVersionsForContent(content, db, params.forceDelete, infogluePrincipal);
+
+			if(!params.skipServiceBindings)
 			    ServiceBindingController.deleteServiceBindingsReferencingContent(content, db);
-			
-			if(parentIterator != null) 
+
+			if (!params.notifyResponsibleOnReferenceChange)
+			{
+				RegistryController.getController().cleanAllForContent(content.getContentId(), infogluePrincipal, db);
+			}
+			if (params.notifyResponsibleOnReferenceChange)
+			{
+				if (referenceBeanList != null)
+				{
+					params.contactPersons.put(getContentPath(content.getValueObject(), false, true, db), referenceBeanList);
+				}
+			}
+
+			if(parentIterator != null)
 			    parentIterator.remove();
-	    	
+
 	    	db.remove(content);
-            
-            Map args = new HashMap();
+
+            Map<String, String> args = new HashMap<String, String>();
             args.put("globalKey", "infoglue");
             PropertySet ps = PropertySetManager.getInstance("jdbc", args);
 
@@ -446,10 +541,9 @@ public class ContentController extends BaseController
 	    else
     	{
     		throw new ConstraintException("ContentVersion.stateId", "3300", content.getName());
-    	}			
-    }        
+    	}
+    }
 
-	
 	/**
 	 * This method returns true if the content does not have any published contentversions or 
 	 * are restricted in any other way.
@@ -1420,9 +1514,9 @@ public class ContentController extends BaseController
 	 * This method returns the bound contents based on a servicebinding.
 	 */
 	
-	public static List getBoundContents(Database db, Integer serviceBindingId) throws SystemException, Exception
+	public static List<ContentVO> getBoundContents(Database db, Integer serviceBindingId) throws SystemException, Exception
 	{
-		List result = new ArrayList();
+		List<ContentVO> result = new ArrayList<ContentVO>();
 		
 		ServiceBinding serviceBinding = ServiceBindingController.getServiceBindingWithId(serviceBindingId, db);
         
@@ -1460,12 +1554,12 @@ public class ContentController extends BaseController
 					while(i.hasNext())
 					{
 						ContentVO candidate = (ContentVO)i.next();
-						result.add(candidate);        		
+						result.add(candidate);
 					}
 				}
 			}
 		}
-	       	  		
+
 		return result;
 	}
 
@@ -1908,6 +2002,11 @@ public class ContentController extends BaseController
 		return contentPath;
 	}
 
+	public String getContentPath(Integer contentId, boolean includeRootContent, boolean includeRepositoryName, Database db) throws ConstraintException, SystemException, Bug, Exception
+	{
+		ContentVO contentVO = getContentVOWithId(contentId, db);
+		return getContentPath(contentVO, includeRootContent, includeRepositoryName, db);
+	}
 	/**
 	 * Returns the path to, and including, the supplied content.
 	 * 
@@ -1916,11 +2015,9 @@ public class ContentController extends BaseController
 	 * @return String the path to, and including, this content "library/library/..."
 	 * 
 	 */
-	public String getContentPath(Integer contentId, boolean includeRootContent, boolean includeRepositoryName, Database db) throws ConstraintException, SystemException, Bug, Exception
+	public String getContentPath(ContentVO contentVO, boolean includeRootContent, boolean includeRepositoryName, Database db) throws ConstraintException, SystemException, Bug, Exception
 	{
 		StringBuffer sb = new StringBuffer();
-
-		ContentVO contentVO = ContentController.getContentController().getContentVOWithId(contentId, db);
 
 		sb.insert(0, contentVO.getName());
 
@@ -1939,6 +2036,54 @@ public class ContentController extends BaseController
 			RepositoryVO repositoryVO = RepositoryController.getController().getRepositoryVOWithId(contentVO.getRepositoryId(), db);
 			if(repositoryVO != null)
 				sb.insert(0, repositoryVO.getName() + " - /");
+		}
+
+		return sb.toString();
+	}
+
+	/**
+	 * Gets the given Content's path a comma separated list (e.g. 123,654,999) where the right most
+	 * id is the provided content-id and the the next id, to the left, is its parent and so on up to
+	 * the ancestor of the given content-id that has no parent content.
+	 * @param contentId
+	 * @return
+	 * @throws SystemException
+	 */
+	public String getContentIdsPathAsCommaSeperatedString(Integer contentId) throws SystemException
+	{
+		String contentPath = null;
+		Database db = null;
+
+		try
+		{
+			db = CastorDatabaseService.getDatabase();
+			beginTransaction(db);
+			contentPath = getContentIdsPathAsCommaSeperatedString(contentId, db);
+			commitTransaction(db);
+		}
+		catch(Exception ex)
+		{
+			logger.error("An error occurred when computing the content-id path so we should not complete the transaction. Message: " + ex.getMessage());
+			logger.warn("An error occurred when computing the content-id path so we should not complete the transaction.", ex);
+			rollbackTransaction(db);
+			return null;
+		}
+
+		return contentPath;
+	}
+
+	public String getContentIdsPathAsCommaSeperatedString(Integer contentId, Database db) throws SystemException, Bug
+	{
+		StringBuilder sb = new StringBuilder();
+
+		ContentVO contentVO = ContentController.getContentController().getContentVOWithId(contentId, db);
+
+		sb.insert(0, contentVO.getContentId());
+
+		while (contentVO.getParentContentId() != null)
+		{
+			contentVO = ContentController.getContentController().getContentVOWithId(contentVO.getParentContentId(), db);
+			sb.insert(0, contentVO.getContentId() + ",");
 		}
 
 		return sb.toString();
@@ -1987,5 +2132,223 @@ public class ContentController extends BaseController
         
         return contentVOList;
 	}
+
+	private Map<String, List<ReferenceBean>> groupByContactPerson(List<ReferenceBean> contactPersons)
+	{
+		Map<String, List<ReferenceBean>> result = new HashMap<String, List<ReferenceBean>>();
+
+		for (ReferenceBean referenceBean : contactPersons)
+		{
+			if (referenceBean.getContactPersonEmail() != null && !referenceBean.getContactPersonEmail().equals(""))
+			{
+				logger.debug("Found contact person on reference for " + referenceBean.getPath() + ". Person: " + referenceBean.getContactPersonEmail());
+				addReferenceToContactPersonList(result, referenceBean, referenceBean.getContactPersonEmail());
+			}
+			for (ReferenceVersionBean referenceVersion : referenceBean.getVersions())
+			{
+				if (referenceVersion.getContactPersonEmail() != null && !referenceVersion.getContactPersonEmail().equals(""))
+				{
+					logger.debug("Found contact person on reference version for " + referenceBean.getPath() + ". Person: " + referenceVersion.getContactPersonEmail());
+					addReferenceToContactPersonList(result, referenceBean, referenceVersion.getContactPersonEmail());
+					break; // Don't add the ReferenceBean for every version.
+				}
+			}
+			for (String concernedPerson : referenceBean.getConcernedPeople())
+			{
+				logger.debug("Found concerned person for " + referenceBean.getPath() + ". Person: " + concernedPerson);
+				addReferenceToContactPersonList(result, referenceBean, concernedPerson);
+			}
+		}
+
+		return result;
+	}
+
+	private void addReferenceToContactPersonList(Map<String, List<ReferenceBean>> result, ReferenceBean referenceBean, String person)
+	{
+		List<ReferenceBean> personsList = result.get(person);
+		if (personsList == null)
+		{
+			logger.debug("First reference for person: " + person);
+			personsList = new ArrayList<ReferenceBean>();
+			result.put(person, personsList);
+		}
+		personsList.add(referenceBean);
+	}
+
+	private Map<String, Map<String, List<ReferenceBean>>> groupByContactPerson(Map<String, List<ReferenceBean>> contactPersons)
+	{
+		Map<String, Map<String, List<ReferenceBean>>> result = new HashMap<String, Map<String,  List<ReferenceBean>>>();
+		for (Map.Entry<String, List<ReferenceBean>> entry : contactPersons.entrySet())
+		{
+			String contentPath = entry.getKey();
+			Map<String, List<ReferenceBean>> referencesByContact = groupByContactPerson(entry.getValue());
+			for (Map.Entry<String, List<ReferenceBean>> contactsForSiteNode : referencesByContact.entrySet())
+			{
+				String contactPerson = contactsForSiteNode.getKey();
+				Map<String,  List<ReferenceBean>> value = result.get(contactPerson);
+				if (value == null)
+				{
+					value = new HashMap<String,  List<ReferenceBean>>();
+					result.put(contactPerson, value);
+				}
+				value.put(contentPath, contactsForSiteNode.getValue());
+			}
+		}
+		if (logger.isDebugEnabled())
+		{
+			logger.debug("Computed contact person tree: " + result);
+		}
+		return result;
+	}
+
+	private void notifyContactPersonsForContent(String contentPath, List<ReferenceBean> contacts, Database db) throws SystemException, Exception
+    {
+    	notifyContactPersonsForContent(Collections.singletonMap(contentPath, contacts), db);
+    }
+
+    private void notifyContactPersonsForContent(Map<String, List<ReferenceBean>> contacts, Database db) throws SystemException, Exception
+    {
+    	Map<String, Map<String, List<ReferenceBean>>> contactMap = groupByContactPerson(contacts);
+
+    	if (logger.isInfoEnabled())
+    	{
+    		logger.info("Will notify people about registry change. " + contactMap);
+    	}
+
+    	String registryContactMailLanguage = CmsPropertyHandler.getRegistryContactMailLanguage();
+    	Locale locale = new Locale(registryContactMailLanguage);
+
+		try
+		{
+			String from = CmsPropertyHandler.getSystemEmailSender();
+    		String subject = getLocalizedString(locale, "tool.contenttool.registry.notificationEmail.subject");
+
+    		// This loop iterate once for each contact person
+			for (Map.Entry<String, Map<String, List<ReferenceBean>>> entry : contactMap.entrySet())
+			{
+				String contactPersonEmail = entry.getKey();
+				Set<String> contentsForPerson = entry.getValue().keySet();
+				Map<String, List<ReferenceBean>> affectedNodes = entry.getValue();
+	    		StringBuilder mailContent = new StringBuilder();
+
+	    		mailContent.append(getLocalizedString(locale, "tool.contenttool.registry.notificationEmail.intro"));
+	    		mailContent.append("<p style=\"color:black !important;\">");
+	    		mailContent.append(getLocalizedString(locale, "tool.contenttool.registry.notificationEmail.siteNodeLabel"));
+	    		mailContent.append("<ul>");
+	    		for (String contentPath : contentsForPerson)
+	    		{
+					mailContent.append("<li>");
+					// Putting a-tags around each entry will prevent email clients from trying to linkify the entries
+					mailContent.append("<a style=\"color:black;\">");
+					mailContent.append(contentPath); //getContentPath(contentVO.getId(), false, true, db)
+					mailContent.append("</a>");
+					mailContent.append("</li>");
+	    		}
+				mailContent.append("</ul>");
+				mailContent.append("</p>");
+
+				boolean hasInformation = false;
+		    	for (Map.Entry<String, List<ReferenceBean>> affectedNode : affectedNodes.entrySet())
+		    	{
+		    		String contentPath = affectedNode.getKey();
+					StringBuilder sb = new StringBuilder();
+					sb.append("<h4 style=\"margin-bottom:4px;color:black !important;\">");
+					sb.append("<a style=\"color:black;\">");
+					sb.append(contentPath);
+					sb.append("</a>");
+
+					String path;
+					String url;
+					StringBuilder siteNodeBuilder = new StringBuilder();
+					StringBuilder contentBuilder = new StringBuilder();
+					if (logger.isInfoEnabled())
+					{
+						logger.info("Reference beans for path: " + affectedNode.getKey() + ". Number of beans: " + contentPath);
+					}
+					for (ReferenceBean reference : affectedNode.getValue())
+					{
+						if (reference.getPath() != null && !reference.getPath().equals(""))
+						{
+							path = reference.getPath();
+						}
+						else
+						{
+							path = reference.getName();
+						}
+
+						if (reference.getReferencingCompletingObject().getClass().getName().indexOf("Content") != -1)
+						{
+							logger.info("Found Content reference bean for path: " + contentPath + ". Reference path: " + path);
+							Integer languageId;
+							if (reference.getVersions().size() == 0)
+							{
+								if (reference.getReferencingCompletingObject() instanceof ContentVO)
+								{
+									languageId = LanguageController.getController().getMasterLanguage(((ContentVO)reference.getReferencingCompletingObject()).getRepositoryId(), db).getLanguageId();
+								}
+								else
+								{
+									languageId = ((LanguageVO)LanguageController.getController().getLanguageVOList(db).get(0)).getLanguageId();
+								}
+								url = CmsPropertyHandler.getCmsFullBaseUrl() + "/ViewCMSTool.action?contentId=" + ((ContentVO)reference.getReferencingCompletingObject()).getContentId() + "&languageId=" + languageId;
+								contentBuilder.append("<li><a href=\"" + url + "\">" + path + "</a></li>");
+							}
+							else
+							{
+								for(ReferenceVersionBean versionBean : reference.getVersions())
+								{
+									ContentVersionVO version = (ContentVersionVO)versionBean.getReferencingObject();
+									languageId = version.getLanguageId();
+									url = CmsPropertyHandler.getCmsFullBaseUrl() + "/ViewContentVersion!standalone.action?contentId=" + ((ContentVO)reference.getReferencingCompletingObject()).getContentId() + "&languageId=" + languageId;
+									contentBuilder.append("<li><a href=\"" + url + "\">" + path + "</a> (" + version.getLanguageName() + ")</li>");
+								}
+							}
+						}
+						else
+						{
+							logger.info("Found SiteNode reference bean for path: " + contentPath + ". Reference path: " + path);
+							url = CmsPropertyHandler.getCmsFullBaseUrl() + "/DeleteContent!fixPage.action?siteNodeId=" + ((SiteNodeVO)reference.getReferencingCompletingObject()).getSiteNodeId() + "&contentId=-1";
+							siteNodeBuilder.append("<li><a href=\"" + url + "\">" + path + "</a></li>");
+						}
+					}
+					if (contentBuilder.length() > 0)
+					{
+						hasInformation = true;
+						sb.append(getLocalizedString(locale, "tool.contenttool.registry.notificationEmail.listHeader.content"));
+						sb.append("<ul style=\"color:black !important;\">");
+						sb.append(contentBuilder);
+						sb.append("</ul>");
+					}
+					if (siteNodeBuilder.length() > 0)
+					{
+						hasInformation = true;
+						sb.append(getLocalizedString(locale, "tool.contenttool.registry.notificationEmail.listHeader.siteNode"));
+						sb.append("<ul style=\"color:black !important;\">");
+						sb.append(siteNodeBuilder);
+						sb.append("</ul>");
+					}
+					sb.append("</p>");
+					mailContent.append(sb);
+				} // end loop: one SiteNode for one contact person
+
+		    	mailContent.append(getLocalizedString(locale, "tool.contenttool.registry.notificationEmail.footer"));
+				if (hasInformation)
+				{
+					logger.debug("Sending notification email to: " + contactPersonEmail);
+					MailServiceFactory.getService().sendEmail("text/html", from, contactPersonEmail, null, null, subject, mailContent.toString(), "utf-8");
+				}
+				else
+				{
+					logger.warn("No Contents or SiteNodes were found for the given person. This is very strange. Contact person: " + contactPersonEmail + ", SiteNode.ids: " + contacts.keySet());
+				}
+			} // end-loop: contact person
+    	}
+    	catch (Exception ex)
+    	{
+    		logger.error("Failed to generate email for contact person notfication. Message: " + ex.getMessage() + ". Type: " + ex.getClass());
+			logger.warn("Failed to generate email for contact person notfication.", ex);
+			throw ex;
+    	}
+    }
 
 }

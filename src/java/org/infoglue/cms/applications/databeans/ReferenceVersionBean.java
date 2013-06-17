@@ -23,7 +23,9 @@
 package org.infoglue.cms.applications.databeans;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.infoglue.cms.entities.management.RegistryVO;
 
@@ -36,35 +38,50 @@ import org.infoglue.cms.entities.management.RegistryVO;
 
 public class ReferenceVersionBean
 {
-    //private String name;
 	private List<RegistryVO> registryVOList = new ArrayList<RegistryVO>();
-    private Object referencingObject;
-    
-    /*
-    public String getName()
-    {
-        return name;
-    }
-    
-    public void setName(String name)
-    {
-        this.name = name;
-    }
-    */
-    
+	private Object referencingObject;
+	private String contactPersonUsername;
+	private String contactPersonEmail;
+
     public Object getReferencingObject()
     {
         return referencingObject;
     }
-    
+
     public void setReferencingObject(Object referencingObject)
     {
         this.referencingObject = referencingObject;
     }
-    
-    public List<RegistryVO> getRegistryVOList()
-    {
-        return registryVOList;
-    }
-        
+
+	public List<RegistryVO> getRegistryVOList()
+	{
+		return registryVOList;
+	}
+
+	public String getContactPersonEmail()
+	{
+		return contactPersonEmail;
+	}
+
+	public void setContactPersonEmail(String contactPersonEmail)
+	{
+		this.contactPersonEmail = contactPersonEmail;
+	}
+
+	public String getContactPersonUsername()
+	{
+		if (contactPersonUsername == null)
+		{
+			return getContactPersonEmail();
+		}
+		else
+		{
+			return contactPersonUsername;
+		}
+	}
+
+	public void setContactPersonUsername(String contactPersonUsername)
+	{
+		this.contactPersonUsername = contactPersonUsername;
+	}
 }

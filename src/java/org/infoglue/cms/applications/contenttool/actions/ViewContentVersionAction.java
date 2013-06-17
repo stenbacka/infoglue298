@@ -881,9 +881,12 @@ public class ViewContentVersionAction extends InfoGlueAbstractAction
 		{
 			List digitalAssets = DigitalAssetController.getDigitalAssetVOList(contentId, languageId, true);
 
+			List<DigitalAssetVO> localDigitalAssets = new ArrayList<DigitalAssetVO>();
+			localDigitalAssets.addAll(digitalAssets);
+
        		if(digitalAssets != null && digitalAssets.size() > 0)
        		{
-       			Iterator digitalAssetsIterator = digitalAssets.iterator();
+       			Iterator digitalAssetsIterator = localDigitalAssets.iterator();
        			while(digitalAssetsIterator.hasNext())
        			{
        				DigitalAssetVO assetVO = (DigitalAssetVO)digitalAssetsIterator.next();
@@ -894,9 +897,9 @@ public class ViewContentVersionAction extends InfoGlueAbstractAction
        				}
        			}
        		}
-       		
-			filteredDigitalAssets.addAll(digitalAssets);
-			
+
+			filteredDigitalAssets.addAll(localDigitalAssets);
+
 			if(filteredDigitalAssets.size() < maxNumberOfAssets)
 			{
 				List children = ContentControllerProxy.getContentController().getContentChildrenVOList(contentId);

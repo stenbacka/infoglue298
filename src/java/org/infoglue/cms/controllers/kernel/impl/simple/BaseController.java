@@ -1214,29 +1214,47 @@ public abstract class BaseController
            	throw new SystemException("An error occurred when we tried to commit an transaction. Reason:" + e.getMessage(), e);    
         }
     }
- 
- 
+
+    /**
+     * Commit the current thread's database object and clear the database object from the thread if the object exists.
+     * Observe that the thread's database will be cleared even if the commit fails.
+     * @throws SystemException If {@link Database#commit()} throws an exception
+     */
+	protected static void commitThreadTransaction() throws SystemException
+	{
+		CastorDatabaseService.commitThreadDatabase();
+    }
+
     /**
      * Rollbacks a transaction on the named database
      */
-     
-    protected static void rollbackTransaction(Database db) throws SystemException
-    {
-        try
-        {
-            //logger.info("rollbackTransaction a transaction in cms...");
-            
-            if (db != null && db.isActive())
-        	{
-                db.rollback();
+	protected static void rollbackTransaction(Database db) throws SystemException
+	{
+		try
+		{
+			//logger.info("rollbackTransaction a transaction in cms...");
+
+			if (db != null && db.isActive())
+			{
+				db.rollback();
 				db.close();
-        	}
-        }
-        catch(Exception e)
-        {
-            logger.warn("An error occurred when we tried to rollback an transaction. Reason:" + e.getMessage());
-        }
-    }
+			}
+		}
+		catch(Exception e)
+		{
+			logger.warn("An error occurred when we tried to rollback an transaction. Reason:" + e.getMessage());
+		}
+	}
+
+	/**
+     * Rollback the current thread's database object and clear the database object from the thread if the object exists.
+     * Observe that the thread's database will be cleared even if the rollback throws an exception.
+     * @throws SystemException If the {@link Database#rollback()} throws an exception
+     */
+	protected static void rollbackThreadTransaction() throws SystemException
+	{
+		CastorDatabaseService.rollbackThreadDatabase();
+	}
 
     /**
      * Rollbacks a transaction on the named database

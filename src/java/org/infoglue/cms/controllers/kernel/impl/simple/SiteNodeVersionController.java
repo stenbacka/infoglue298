@@ -34,6 +34,7 @@ import org.apache.log4j.Logger;
 import org.exolab.castor.jdo.Database;
 import org.exolab.castor.jdo.OQLQuery;
 import org.exolab.castor.jdo.QueryResults;
+import org.infoglue.cms.controllers.kernel.impl.simple.ContentController.DeleteContentParams;
 import org.infoglue.cms.entities.content.Content;
 import org.infoglue.cms.entities.content.ContentVO;
 import org.infoglue.cms.entities.content.ContentVersion;
@@ -714,7 +715,7 @@ public class SiteNodeVersionController extends BaseController
 
 	/**
 	 * Deletes the meta info for the sitenode version.
-	 * 
+	 *
 	 * @param siteNodeVersionId
 	 * @return
 	 * @throws ConstraintException
@@ -722,15 +723,19 @@ public class SiteNodeVersionController extends BaseController
 	 */
 	private static void deleteMetaInfoForSiteNodeVersion(Database db, ServiceBinding serviceBinding, InfoGluePrincipal infoGluePrincipal) throws ConstraintException, SystemException, Bug, Exception
 	{
-		List boundContents = ContentController.getBoundContents(db, serviceBinding.getId()); 			
+		List<ContentVO> boundContents = ContentController.getBoundContents(db, serviceBinding.getId());
 		if(boundContents.size() > 0)
 		{
-			ContentVO contentVO = (ContentVO)boundContents.get(0);
-			ContentController.getContentController().delete(contentVO, db, true, true, true, infoGluePrincipal);
+			ContentVO contentVO = boundContents.get(0);
+			DeleteContentParams deleteParams = new ContentController.DeleteContentParams();
+			// public /*synchronized*/ void delete(ContentVO contentVO, Database db, boolean skipRelationCheck, boolean skipServiceBindings, boolean forceDelete, InfoGluePrincipal infogluePrincipal, Map<String, List<ReferenceBean>> contactPersons, boolean excludeReferencesInSite) throws ConstraintException, SystemException, Exception
+			deleteParams.setSkipRelationCheck(true);
+			deleteParams.setSkipServiceBindings(true);
+			deleteParams.setForceDelete(true);
+			ContentController.getContentController().delete(contentVO, infoGluePrincipal, deleteParams, db);
 		}
 	}
-	
-	
+
    	/**
 	 * This method returns a list with AvailableServiceBidningVO-objects which are available for the
 	 * siteNodeTypeDefinition sent in

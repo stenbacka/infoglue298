@@ -202,11 +202,13 @@
 			resize();
 			//alert('path: $!path');
 			//alert('exp: $!exp');
-			if("$!path" == "")
+			##if( "$!contentId" == "" )
+			#if("$!path" == "")
 				reloadMain();
-			else
-				syncWithTree("$!path", currentRepositoryId);
-				
+			#else
+				##syncWithTree("$!path", currentRepositoryId);
+			#end
+
 			$(window).resize( function() {
      			resize();
  			});
@@ -281,7 +283,7 @@
 			<td class="menu"><img src="images/trans.gif" height="15"/></td>
 		</tr>
 		<tr>
-			<td class="menu" width="100%" height="100%">   
+			<td class="menu" width="100%" height="100%">
 				#if($tree == "applet")
 					#showJavaTree("220" "550" "199" "209" "179" "Content" $repositoryId "false")
 				#else

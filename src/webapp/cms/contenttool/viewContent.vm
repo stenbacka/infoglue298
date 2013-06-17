@@ -253,24 +253,24 @@
 		#if($referenceBean.referencingCompletingObject.class.name.indexOf("Content") > -1)
 			#if($count < 20)
 				#set($hasContentReferences = true)
-				#set($lastIndex = $referenceBean.versions.size() - 1)
-				#if($isOdd)
-					#set($class = "class='lightgreen'")
-					#set($isOdd = false)
-				#else
-					#set($class = "class='white'")
-					#set($isOdd = true)
+				#foreach ($version in $referenceBean.versions)
+					#if($isOdd)
+						#set($class = "class='lightgreen'")
+						#set($isOdd = false)
+					#else
+						#set($class = "class='white'")
+						#set($isOdd = true)
+					#end
+					#set( $editUrl = "ViewContentVersion!standalone.action?contentId=$referenceBean.referencingCompletingObject.contentId&languageId=$version.referencingObject.languageId" )
+					<tr $class>
+						<td width="16"><img src="images/tree/contentRoot.gif" width="16" height="16"></td>
+						<td width="100%" colspan="2">
+							<a href="$editUrl" target="_blank">$referenceBean.path</a> ($version.referencingObject.languageName) ($!version.contactPersonEmail)
+		 				</td>
+					</tr>
 				#end
-				<tr $class>
-					<td width="16"><img src="images/tree/contentRoot.gif" width="16" height="16"></td>
-					<td width="100%">
-						<a href="ViewContentVersion!standalone.action?contentId=$referenceBean.referencingCompletingObject.contentId&languageId=$referenceBean.versions.get($lastIndex).referencingObject.languageId" target="_blank">$referenceBean.path</a>
-	 					- #if($referenceBean.versions.get($lastIndex).registryVOList.size() > 1) $referenceBean.versions.get($lastIndex).registryVOList.size() $ui.getString("tool.contenttool.referencesFound") #end ($referenceBean.versions.size() $ui.getString("tool.contenttool.versions"))
-	 				</td>
-					<td width="16"><a href="ViewContentVersion!standalone.action?contentId=$referenceBean.referencingCompletingObject.contentId&languageId=$referenceBean.versions.get($lastIndex).referencingObject.languageId" target="_blank"><img src="images/edit.gif" border="0"></a></td>
-				</tr>
 			#end
-			#set($count = $count + 1)	
+			#set($count = $count + 1)
 		#end
 	#end
 	#if($count > 20)
@@ -318,13 +318,13 @@
 					#set($class = "class='white'")
 					#set($isOdd = true)
 				#end
+				#set( $editUrl = "${componentRendererUrl}${componentRendererAction}?siteNodeId=$referenceBean.referencingCompletingObject.siteNodeId&contentId=-1" )
 				<tr $class>
 					<td width="16"><img src="images/tree/structureRoot.gif"></td>
-					<td width="100%">
-						<a href="${componentRendererUrl}${componentRendererAction}?siteNodeId=$referenceBean.referencingCompletingObject.siteNodeId&contentId=-1" target="_blank">$referenceBean.path</a>
-						- #if($referenceBean.versions.get($lastIndex).registryVOList.size() > 1) $referenceBean.versions.get($lastIndex).registryVOList.size() $ui.getString("tool.structuretool.referencesFound") #end ($referenceBean.versions.size() $ui.getString("tool.structuretool.versions"))
+					<td width="100%" colspan="2">
+						<a href="$editUrl" target="_blank">$referenceBean.path</a> ($!referenceBean.contactPersonEmail)
 					</td>
-					<td width="16"><a href="${componentRendererUrl}${componentRendererAction}?siteNodeId=$referenceBean.referencingCompletingObject.siteNodeId&contentId=-1" target="_blank"><img src="images/edit.gif" border="0"></a></td>
+					##<td width="16"><a href="${componentRendererUrl}${componentRendererAction}?siteNodeId=$referenceBean.referencingCompletingObject.siteNodeId&contentId=-1" target="_blank"><img src="images/edit.gif" border="0"></a></td>
 				</tr>	
 			#end
 			#set($count = $count + 1)

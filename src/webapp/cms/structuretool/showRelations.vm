@@ -33,7 +33,7 @@
 	</tr>
 	#set($hasPageReferences = false)
 	#set($isOdd = true)
-	#foreach ($referenceBean in $referenceBeanList)		
+	#foreach ($referenceBean in $referenceBeanList)
 		#if($referenceBean.referencingCompletingObject.class.name.indexOf("SiteNode") > -1)
 			#set($hasPageReferences = true)
 			#if($isOdd)
@@ -45,7 +45,7 @@
 			#end
 			<tr $class>
 				<td><img src="images/tree/structureRoot.gif"></td>
-				<td colspan="3" width="100%"><a href="DeleteContent!fixPage.action?siteNodeId=$referenceBean.referencingCompletingObject.siteNodeId&contentId=-1" target="_blank">$referenceBean.path</a> ($referenceBean.contactPersonEmail) #if($referenceBean.registryVOList.size() > 1)- $referenceBean.registryVOList.size() $ui.getString("tool.structuretool.referencesFound")#end</td>
+				<td colspan="3" width="100%"><a href="DeleteContent!fixPage.action?siteNodeId=$referenceBean.referencingCompletingObject.siteNodeId&contentId=-1" target="_blank">$referenceBean.path</a> ($referenceBean.contactPersonEmail)</td>
 				<!--<td colspan="4"><a href="${componentRendererUrl}${componentRendererAction}?siteNodeId=$referenceBean.referencingCompletingObject.siteNodeId&contentId=-1" target="_blank">$referenceBean.name</a></td>-->
 				<td nowrap="1"><!--<a href="DeleteReference.action?xxxx"><img src="images/delete.gif" border="0"></a><img src="images/trans.gif" border="0" width="5" height="5">--></td>
 				<!--<td><a href="${componentRendererUrl}${componentRendererAction}?siteNodeId=$referenceBean.referencingCompletingObject.siteNodeId&contentId=-1" target="_blank"><img src="images/edit.gif" border="0"></a></td>-->
@@ -77,22 +77,25 @@
 	#foreach ($referenceBean in $referenceBeanList)
 		#if($referenceBean.referencingCompletingObject.class.name.indexOf("Content") > -1)
 			#set($hasContentReferences = true)
-			#set($lastIndex = $referenceBean.versions.size() - 1)
-			#set($languageId = $referenceBean.versions.get($lastIndex).referencingObject.languageId)
-			#if($isOdd)
-				#set($class = "class='lightapricot'")
-				#set($isOdd = false)
-			#else
-				#set($class = "class='white'")
-				#set($isOdd = true)	
+			##set($lastIndex = $referenceBean.versions.size() - 1)
+			##set($languageId = $referenceBean.versions.get($lastIndex).referencingObject.languageId)
+			#foreach ($version in $referenceBean.versions)
+				#if($isOdd)
+					#set($class = "class='lightapricot'")
+					#set($isOdd = false)
+				#else
+					#set($class = "class='white'")
+					#set($isOdd = true)	
+				#end
+				#set( $editUrl = "ViewContentVersion!standalone.action?contentId=$referenceBean.referencingCompletingObject.contentId&languageId=$version.referencingObject.languageId" )
+				<tr $class>
+					<td><img src="images/tree/contentRoot.gif"></td>
+					<td colspan="3" width="100%"><a href="$editUrl" target="_blank">$referenceBean.path</a> ($version.referencingObject.languageName) ($version.contactPersonEmail)</td>
+					<td nowrap="1"><!--<a href="#"><img src="images/delete.gif" border="0"></a><img src="images/trans.gif" border="0" width="5" height="5">--></td>
+					<td nowrap="1"><a href=" $editUrl" target="_blank"><img src="images/edit.gif" border="0"></a><img src="images/trans.gif" border="0" width="5" height="5"></td>
+					<td nowrap="1"><a href="DeleteSiteNode!deleteReference.action?siteNodeId=$originalSiteNodeId#foreach($version in $referenceBean.versions)#foreach($registryVO in $version.registryVOList)&registryId=$registryVO.id#end#end"><img src="images/ok_icon.gif" border="0"></a><img src="images/trans.gif" border="0" width="5" height="5"></td>		
+				</tr>
 			#end
-			<tr $class>
-				<td><img src="images/tree/contentRoot.gif"></td>
-				<td colspan="3" width="100%"><a href="ViewContentVersion!standalone.action?contentId=$referenceBean.referencingCompletingObject.contentId&languageId=$languageId" target="_blank">$referenceBean.path</a> ($referenceBean.contactPersonEmail) #if($referenceBean.registryVOList.size() > 1)- $referenceBean.registryVOList.size() $ui.getString("tool.structuretool.referencesFound")#end</td>
-				<td nowrap="1"><!--<a href="#"><img src="images/delete.gif" border="0"></a><img src="images/trans.gif" border="0" width="5" height="5">--></td>
-				<td nowrap="1"><a href="ViewContentVersion!standalone.action?contentId=$referenceBean.referencingCompletingObject.contentId&languageId=$languageId" target="_blank"><img src="images/edit.gif" border="0"></a><img src="images/trans.gif" border="0" width="5" height="5"></td>
-				<td nowrap="1"><a href="DeleteSiteNode!deleteReference.action?siteNodeId=$originalSiteNodeId#foreach($version in $referenceBean.versions)#foreach($registryVO in $version.registryVOList)&registryId=$registryVO.id#end#end"><img src="images/ok_icon.gif" border="0"></a><img src="images/trans.gif" border="0" width="5" height="5"></td>		
-			</tr>	
 		#end
 	#end
 	#if(!$hasContentReferences)
@@ -105,7 +108,12 @@
 	</tr>
 	<tr>
 		<td colspan="7">
-			<a href="DeleteSiteNode!deleteAllReferences.action?siteNodeId=$originalSiteNodeId">$ui.getString("tool.structuretool.removeAllReferences")</a>
+			#if( $notifyResponsibleOnReferenceChange )
+				#set( $forceDeleteMessage = $ui.getString("tool.structuretool.removeAndNotifyAllReferences") )
+			#else
+				#set( $forceDeleteMessage = $ui.getString("tool.structuretool.removeAndCleanAllReferences") )
+			#end
+			<a href="DeleteSiteNode!deleteAllReferences.action?siteNodeId=$originalSiteNodeId">$!forceDeleteMessage</a>
 		</td>
 	</tr>
 		

@@ -38,6 +38,10 @@ public class ViewCMSToolHeaderAction extends InfoGlueAbstractAction
 {
 	private static final long serialVersionUID = -6699854300371586633L;
 
+	private Integer contentId;
+	private Integer siteNodeId;
+	private Integer languageId;
+
 	public String getUserName()
 	{
 		return this.getInfoGluePrincipal().getName();
@@ -62,5 +66,39 @@ public class ViewCMSToolHeaderAction extends InfoGlueAbstractAction
     {
         return "success";
     }
-               
+
+	public String doLoginStandalone() throws Exception
+	{
+		return "loginComplete";
+	}
+
+	public Integer getContentId()
+	{
+		return contentId;
+	}
+
+	public void setContentId(Integer contentId)
+	{
+		this.contentId = contentId;
+	}
+
+	public Integer getSiteNodeId()
+	{
+		return siteNodeId;
+	}
+
+	public void setSiteNodeId(Integer siteNodeId)
+	{
+		this.siteNodeId = siteNodeId;
+	}
+
+	public Integer getLanguageId()
+	{
+		return languageId;
+	}
+
+	public void setLanguageId(Integer languageId)
+	{
+		this.languageId = languageId;
+	}
 }

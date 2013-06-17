@@ -1944,11 +1944,4 @@ public class CmsPropertyHandler
 		return getServerNodeProperty("registryContactMailLanguage", true, "en");
 	}
 
-	public static boolean getOnlyShowReferenceIfLatestVersion()
-	{
-		String onlyShowReferenceIfLatestVersion = getServerNodeProperty("onlyShowReferenceIfLatestVersion", true, "false");
-
-		return Boolean.parseBoolean(onlyShowReferenceIfLatestVersion);
-	}
-
 }
