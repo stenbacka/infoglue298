@@ -39,7 +39,7 @@ import org.apache.log4j.Logger;
 import org.apache.xerces.parsers.DOMParser;
 import org.exolab.castor.jdo.Database;
 import org.exolab.castor.jdo.OQLQuery;
-import org.exolab.castor.jdo.ObjectNotFoundException;
+import org.exolab.castor.jdo.PersistenceException;
 import org.exolab.castor.jdo.QueryResults;
 import org.infoglue.cms.applications.common.VisualFormatter;
 import org.infoglue.cms.applications.databeans.OptimizationBeanList;
@@ -49,14 +49,12 @@ import org.infoglue.cms.entities.content.ContentVersion;
 import org.infoglue.cms.entities.content.ContentVersionVO;
 import org.infoglue.cms.entities.content.DigitalAsset;
 import org.infoglue.cms.entities.content.DigitalAssetVO;
-import org.infoglue.cms.entities.content.SmallestContentVersion;
 import org.infoglue.cms.entities.content.SmallestContentVersionVO;
 import org.infoglue.cms.entities.content.impl.simple.ContentImpl;
 import org.infoglue.cms.entities.content.impl.simple.ContentVersionImpl;
 import org.infoglue.cms.entities.content.impl.simple.ExportContentVersionImpl;
 import org.infoglue.cms.entities.content.impl.simple.MediumDigitalAssetImpl;
 import org.infoglue.cms.entities.content.impl.simple.SmallContentVersionImpl;
-import org.infoglue.cms.entities.content.impl.simple.SmallDigitalAssetImpl;
 import org.infoglue.cms.entities.content.impl.simple.SmallestContentVersionImpl;
 import org.infoglue.cms.entities.kernel.BaseEntityVO;
 import org.infoglue.cms.entities.management.ContentTypeDefinition;
@@ -66,9 +64,7 @@ import org.infoglue.cms.entities.management.RegistryVO;
 import org.infoglue.cms.entities.management.impl.simple.LanguageImpl;
 import org.infoglue.cms.entities.publishing.PublicationVO;
 import org.infoglue.cms.entities.structure.SiteNode;
-import org.infoglue.cms.entities.structure.SiteNodeVO;
 import org.infoglue.cms.entities.structure.SiteNodeVersion;
-import org.infoglue.cms.entities.structure.SiteNodeVersionVO;
 import org.infoglue.cms.entities.workflow.EventVO;
 import org.infoglue.cms.exception.Bug;
 import org.infoglue.cms.exception.ConstraintException;
@@ -77,8 +73,6 @@ import org.infoglue.cms.security.InfoGluePrincipal;
 import org.infoglue.cms.util.CmsPropertyHandler;
 import org.infoglue.cms.util.ConstraintExceptionBuffer;
 import org.infoglue.cms.util.DateHelper;
-import org.infoglue.deliver.util.CacheController;
-import org.infoglue.deliver.util.NullObject;
 import org.infoglue.deliver.util.RequestAnalyser;
 import org.infoglue.deliver.util.Timer;
 import org.w3c.dom.CDATASection;
@@ -86,8 +80,6 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
-
-import com.frovi.ss.Tree.INodeSupplier;
 
 /**
  * @author Mattias Bogeblad
@@ -1036,6 +1028,34 @@ public class ContentVersionController extends BaseController
         }
         content.setContentVersions(new ArrayList());
     }
+
+	public void deleteContentVersionsForContentWithId(Integer contentId, boolean forceDelete, Database db) throws SystemException, Bug, Exception
+	{
+		List<ContentVersion> versions = getContentVersionListForContent(contentId, db);
+		System.out.println("CV versions: " + versions.size() + " contentId: " + contentId);
+		Iterator<ContentVersion> contentVersionIterator = versions.iterator();
+
+		while (contentVersionIterator.hasNext())
+		{
+			ContentVersion contentVersion = contentVersionIterator.next();
+			if (!forceDelete && contentVersion.getStateId().intValue() == ContentVersionVO.PUBLISHED_STATE.intValue() && contentVersion.getIsActive().booleanValue() == true)
+			{
+				ContentVO contentVO = ContentController.getContentController().getContentVOWithId(contentId, db);
+				throw new ConstraintException("ContentVersion.stateId", "3300", contentVO.getName());
+			}
+
+			contentCategoryController.deleteByContentVersionId(contentVersion.getContentVersionId(), db);
+//			ContentVersion heavyVersion = getContentVersionWithId(contentVersion.getContentVersionId(), db);
+//			DigitalAssetController.getController().deleteByContentVersion(heavyVersion, db);
+
+//			Content content = contentVersion.getOwningContent();
+//
+//			if(content != null)
+//				content.getContentVersions().remove(contentVersion);
+
+			db.remove(contentVersion);
+		}
+	}
 
 	/**
 	 * This method deletes a digitalAsset.
@@ -2543,5 +2563,45 @@ public class ContentVersionController extends BaseController
     	    
     	return digitalAssetVO;
     }
+
+	public List<ContentVersion> getContentVersionListForContent(Integer contentId, Database db) throws SystemException, PersistenceException
+	{
+		List<ContentVersion> contentVersionList = new ArrayList<ContentVersion>();
+
+		OQLQuery oql = db.getOQLQuery( "SELECT cv FROM org.infoglue.cms.entities.content.impl.simple.SmallContentVersionImpl cv WHERE cv.contentId = $1" );
+		oql.bind(contentId);
+
+		QueryResults results = oql.execute();
+		while (results.hasMore())
+		{
+			ContentVersion contentVersion = (ContentVersion)results.next();
+			contentVersionList.add(contentVersion);
+		}
+
+		results.close();
+		oql.close();
+
+		return contentVersionList;
+	}
+
+
+
+	public boolean getIsContentDeletable(Integer contentId, Database db) throws PersistenceException, SystemException
+	{
+		boolean isDeletable = true;
+		List<ContentVersion> contentVersions = getContentVersionListForContent(contentId, db);
+		Iterator<ContentVersion> versionIterator = contentVersions.iterator();
+		while (versionIterator.hasNext()) 
+		{
+			ContentVersion contentVersion = versionIterator.next();
+			if(contentVersion.getStateId().intValue() == ContentVersionVO.PUBLISHED_STATE.intValue() && contentVersion.getIsActive().booleanValue() == true)
+			{
+				logger.info("The content had a published version so we cannot delete it..");
+				isDeletable = false;
+				break;
+			}
+		}
+		return isDeletable;
+	}
 
 }

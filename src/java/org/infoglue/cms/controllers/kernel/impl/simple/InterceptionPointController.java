@@ -155,6 +155,7 @@ public class InterceptionPointController extends BaseController
 	    systemInterceptionPoints.put("ManagementToolMenu.Diagnostics", new InterceptionPointVO("ManagementToolMenu", "ManagementToolMenu.Diagnostics", "Intercepts access to the menu item 'Diagnostics' in management tool", false));
 	    systemInterceptionPoints.put("ManagementToolMenu.SystemTools", new InterceptionPointVO("ManagementToolMenu", "ManagementToolMenu.SystemTools", "Intercepts access to the menu item 'SystemTools' in management tool", false));
 	    systemInterceptionPoints.put("ManagementToolMenu.TransactionHistory", new InterceptionPointVO("ManagementToolMenu", "ManagementToolMenu.TransactionHistory", "Intercepts access to the menu item 'TransactionHistory' in management tool", false));
+	    systemInterceptionPoints.put("Common.ManageProcessBeans", new InterceptionPointVO("Common", "Common.ManageProcessBeans", "Intercepts viewing and editing of process beans", false));
 
 	    systemInterceptionPoints.put("Role.Read", new InterceptionPointVO("Role", "Role.Read", "Intercepts the read of a role", true));
 	    systemInterceptionPoints.put("Role.ReadForAssignment", new InterceptionPointVO("Role", "Role.ReadForAssignment", "Intercepts the read of a role when assigning them to a user", true));

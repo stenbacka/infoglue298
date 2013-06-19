@@ -26,13 +26,17 @@ package org.infoglue.cms.controllers.kernel.impl.simple;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
 
 import org.apache.log4j.Logger;
 import org.exolab.castor.jdo.Database;
 import org.exolab.castor.jdo.OQLQuery;
+import org.exolab.castor.jdo.PersistenceException;
 import org.exolab.castor.jdo.QueryResults;
-import org.infoglue.cms.controllers.kernel.impl.simple.ContentController.DeleteContentParams;
+import org.infoglue.cms.applications.databeans.ProcessBean;
+import org.infoglue.cms.entities.content.Content;
 import org.infoglue.cms.entities.content.ContentVO;
 import org.infoglue.cms.entities.kernel.BaseEntityVO;
 import org.infoglue.cms.entities.management.Language;
@@ -48,11 +52,10 @@ import org.infoglue.cms.security.InfoGluePrincipal;
 import org.infoglue.cms.util.ConstraintExceptionBuffer;
 import org.infoglue.cms.util.sorters.ReflectionComparator;
 import org.infoglue.deliver.util.CacheController;
-import org.infoglue.deliver.util.Timer;
 
 public class RepositoryController extends BaseController
 {
-    private final static Logger logger = Logger.getLogger(RepositoryController.class.getName());
+	private final static Logger logger = Logger.getLogger(RepositoryController.class.getName());
 
 	/**
 	 * Factory method
@@ -62,101 +65,108 @@ public class RepositoryController extends BaseController
 	{
 		return new RepositoryController();
 	}
+
+	public RepositoryVO create(RepositoryVO vo) throws ConstraintException, SystemException
+	{
+		Repository ent = new RepositoryImpl();
+		ent.setValueObject(vo);
+		ent = (Repository) createEntity(ent);
+		return ent.getValueObject();
+	}
 	
-    public RepositoryVO create(RepositoryVO vo) throws ConstraintException, SystemException
-    {
-        Repository ent = new RepositoryImpl();
-        ent.setValueObject(vo);
-        ent = (Repository) createEntity(ent);
-        return ent.getValueObject();
-    }     
+//	private void x(LinkedList<List<Integer>> batches, ContentVO content, Database db) throws PersistenceException, SystemException, Bug
+//	{
+//		List<Content> children = ContentController.getContentController().getContentChildrenForContent(content.getContentId(), db);
+//		
+//		for (Content c : children)
+//		{
+//			x(batches, c.getValueObject(), db);
+//		}
+//		
+//		List<Integer> batch = batches.getFirst();
+//		if (batch.size() > 50)
+//		{
+//			batch = new ArrayList<Integer>();
+//			batches.addFirst(batch);
+//		}
+//		batch.add(content.getContentId());
+//	}
 
 	/**
 	 * This method removes a Repository from the system and also cleans out all depending repositoryLanguages.
 	 */
-	
-    public void delete(RepositoryVO repositoryVO, String userName, InfoGluePrincipal infoGluePrincipal) throws ConstraintException, SystemException
-    {
-    	delete(repositoryVO, userName, false, infoGluePrincipal);
-    }
-    
-	/**
-	 * This method removes a Repository from the system and also cleans out all depending repositoryLanguages.
-	 */
-	
-    public void delete(RepositoryVO repositoryVO, String userName, boolean forceDelete, InfoGluePrincipal infoGluePrincipal) throws ConstraintException, SystemException
-    {
-		Database db = CastorDatabaseService.getThreadDatabase();
-		ConstraintExceptionBuffer ceb = new ConstraintExceptionBuffer();
-
-		Repository repository = null;
-
-		try
+	public void delete(final RepositoryVO repositoryVO, final String userName, final boolean forceDelete, final InfoGluePrincipal infoGluePrincipal, final ProcessBean processBean) throws ConstraintException, SystemException
+	{
+		new Thread()
 		{
-			repository = getRepositoryWithId(repositoryVO.getRepositoryId(), db);
-
-			RepositoryLanguageController.getController().deleteRepositoryLanguages(repository, db);
-
-			SiteNodeVO siteNodeVO = SiteNodeController.getController().getRootSiteNodeVO(repositoryVO.getRepositoryId());
-			if(siteNodeVO != null)
+			public void run()
 			{
-				if(forceDelete)
-					SiteNodeController.getController().delete(siteNodeVO, db, true, infoGluePrincipal, true);
-				else
-					SiteNodeController.getController().delete(siteNodeVO, db, false, infoGluePrincipal, true);
-			}
-
-			ContentVO contentVO = ContentControllerProxy.getController().getRootContentVO(repositoryVO.getRepositoryId(), userName, false);
-			if(contentVO != null)
-			{
-				DeleteContentParams deleteParams = new DeleteContentParams();
-				if(forceDelete)
+				try
 				{
-					deleteParams.setSkipRelationCheck(true);
-					deleteParams.setSkipServiceBindings(true);
-					deleteParams.setForceDelete(true);
-					deleteParams.setExcludeReferencesInSite(true);
-					ContentController.getContentController().delete(contentVO, infoGluePrincipal, deleteParams, db);
+					processBean.setStatus(ProcessBean.RUNNING);
+					processBean.updateProcess("Initializing repository delete operation");
+					Database db = CastorDatabaseService.getThreadDatabase();
+					ConstraintExceptionBuffer ceb = new ConstraintExceptionBuffer();
+
+					Repository repository = null;
+
+					try
+					{
+						repository = getRepositoryWithId(repositoryVO.getRepositoryId(), db);
+						
+//						LinkedList<List<Integer>> batches = new LinkedList<List<Integer>>();
+//						batches.add(new ArrayList<Integer>());
+//						
+//						ContentVO content = ContentController.getContentController().getRootContentVO(repositoryVO.getRepositoryId(), db);
+//						x(batches, content, db);
+//						System.out.println("Num batches: " + batches.size());
+//						System.out.println("Batches: " + batches);
+
+						RepositoryLanguageController.getController().deleteRepositoryLanguages(repository, db);
+
+						processBean.updateProcess("Deleting SiteNodes");
+						SiteNodeController.getController().deleteSiteNodesInRepository(repositoryVO.getRepositoryId(), infoGluePrincipal, forceDelete, db);
+						processBean.updateProcess("Deleting Contents");
+						ContentController.getContentController().deleteContentInRepository(repositoryVO.getRepositoryId(), infoGluePrincipal, forceDelete, db);
+						db.remove(repository);
+
+						//If any of the validations or setMethods reported an error, we throw them up now before create.
+						ceb.throwIfNotEmpty();
+
+						commitThreadTransaction();
+						processBean.setStatus(ProcessBean.FINISHED);
+					}
+					catch(ConstraintException ce)
+					{
+						logger.warn("An error occurred so we should not completes the transaction:" + ce, ce);
+						rollbackThreadTransaction();
+						// TODO improve handling of constrain exceptions
+						processBean.setError("An error occurred so we should not completes the transaction:" + ce, ce);
+					}
+					catch(Throwable ex)
+					{
+						logger.error("An error occurred so we should not completes the transaction. Message: " + ex);
+						logger.warn("An error occurred so we should not complete the transaction", ex);
+						rollbackThreadTransaction();
+						processBean.setError("An error occurred when deleting the repository. Message: " + ex.getMessage(), ex);
+					}
 				}
-				else
+				catch (Throwable tr)
 				{
-					deleteParams.setSkipRelationCheck(false);
-					deleteParams.setSkipServiceBindings(false);
-					deleteParams.setForceDelete(false);
-					deleteParams.setExcludeReferencesInSite(true);
-					ContentController.getContentController().delete(contentVO, infoGluePrincipal, deleteParams, db);
+					logger.warn("An unexpected exception occured when deleting a repository", tr);
+					processBean.setError("An unexpected exception occured when deleting a repository. Message: " + tr.getMessage(), tr);
 				}
 			}
+		}.start();
+	}
 
-			deleteEntity(RepositoryImpl.class, repositoryVO.getRepositoryId(), db);
+	public RepositoryVO update(RepositoryVO vo) throws ConstraintException, SystemException
+	{
+		return (RepositoryVO) updateEntity(RepositoryImpl.class, (BaseEntityVO) vo);
+	}
 
-			//If any of the validations or setMethods reported an error, we throw them up now before create.
-			ceb.throwIfNotEmpty();
-
-			commitThreadTransaction();
-		}
-		catch(ConstraintException ce)
-		{
-			logger.warn("An error occurred so we should not completes the transaction:" + ce, ce);
-			rollbackThreadTransaction();
-			throw ce;
-		}
-		catch(Exception e)
-		{
-			logger.error("An error occurred so we should not completes the transaction:" + e, e);
-			rollbackThreadTransaction();
-			throw new SystemException(e.getMessage());
-		}
-    } 
-    
-    
-    public RepositoryVO update(RepositoryVO vo) throws ConstraintException, SystemException
-    {
-    	return (RepositoryVO) updateEntity(RepositoryImpl.class, (BaseEntityVO) vo);
-    }        
-    
-    public RepositoryVO update(RepositoryVO repositoryVO, String[] languageValues) throws ConstraintException, SystemException
-    {
+	public RepositoryVO update(RepositoryVO repositoryVO, String[] languageValues) throws ConstraintException, SystemException
+	{
     	Database db = CastorDatabaseService.getDatabase();
         ConstraintExceptionBuffer ceb = new ConstraintExceptionBuffer();
 

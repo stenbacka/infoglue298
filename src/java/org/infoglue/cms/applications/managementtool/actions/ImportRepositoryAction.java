@@ -354,6 +354,7 @@ public class ImportRepositoryAction extends InfoGlueAbstractAction
 	protected String importV3(File file) throws Exception 
 	{
 		String exportId = "Import_" + visualFormatter.formatDate(new Date(), "yyyy-MM-dd_HHmm");
+		ProcessBean processBean = ProcessBean.createProcessBean(ImportRepositoryAction.class.getName(), exportId, getInfoGluePrincipal());
 		ProcessBean processBean = ProcessBean.createProcessBean(ImportRepositoryAction.class.getName(), exportId);
 		
 		OptimizedImportController.importRepositories(file, this.onlyLatestVersions, this.standardReplacement, this.replacements, processBean);
@@ -383,6 +384,7 @@ public class ImportRepositoryAction extends InfoGlueAbstractAction
 				String[] repositories = getRequest().getParameterValues("repositoryId");
 				
 				String exportId = "Copy_Import_" + visualFormatter.formatDate(new Date(), "yyyy-MM-dd_HHmm");
+				ProcessBean processBean = ProcessBean.createProcessBean(ImportRepositoryAction.class.getName(), exportId, getInfoGluePrincipal());
 				ProcessBean processBean = ProcessBean.createProcessBean(ImportRepositoryAction.class.getName(), exportId);
 				
 				OptimizedExportController.copy(repositories, -1, false, null, processBean, onlyLatestVersions, standardReplacement, replacements);
@@ -608,6 +610,7 @@ public class ImportRepositoryAction extends InfoGlueAbstractAction
 		this.processId = processId;
 	}
 
+	public List<ProcessBean> getProcessBeans() throws SystemException
 	public List<ProcessBean> getProcessBeans()
 	{
 		return ProcessBean.getProcessBeans(ImportRepositoryAction.class.getName());

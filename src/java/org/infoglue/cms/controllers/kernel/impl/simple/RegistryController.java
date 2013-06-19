@@ -350,14 +350,14 @@ public class RegistryController extends BaseController
     	}
     }
 
-    public void cleanAllForSiteNode(Integer siteNodeId, InfoGluePrincipal principal, Database db) throws Exception
-    {
+	public void cleanAllForSiteNode(Integer siteNodeId, InfoGluePrincipal principal, Database db) throws Exception
+	{
 		List<RegistryVO> registryEntires = getMatchingRegistryVOList(SiteNode.class.getName(), siteNodeId.toString(), -1, db);
-    	Map<ContentVersionVO, RegistryVO> contentVersionRegistryPair = extractContentVersionsFromRegistryList(registryEntires, db);
+		Map<ContentVersionVO, RegistryVO> contentVersionRegistryPair = extractContentVersionsFromRegistryList(registryEntires, db);
 		InconsistenciesController.getController().removeContentReferences(contentVersionRegistryPair, principal, db);
 		Map<SiteNodeVO, RegistryVO> siteNodeRegistryPair = extractSiteNodesFromRegistryList(registryEntires, db);
 		InconsistenciesController.getController().removeSiteNodeReferences(siteNodeRegistryPair, principal, db);
-    }
+	}
 
 	public void cleanAllForContent(Integer contentId, InfoGluePrincipal principal) throws SystemException
 	{
@@ -1605,9 +1605,8 @@ public class RegistryController extends BaseController
 		Integer excludeRespositoryId = null;
 		if (excludeReferenceInSite)
 		{
-			@SuppressWarnings("static-access")
-			SiteNodeVO siteNodeVO = SiteNodeController.getController().getSiteNodeVOWithId(siteNodeId, db);
-			RepositoryVO repositoryVO = RepositoryController.getController().getRepositoryVOWithId(siteNodeVO.getRepositoryId(), db);
+			SiteNode siteNode = SiteNodeController.getController().getSmallSiteNodeWithId(siteNodeId, db);
+			RepositoryVO repositoryVO = RepositoryController.getController().getRepositoryVOWithId(siteNode.getValueObject().getRepositoryId(), db);
 			excludeRespositoryId = repositoryVO.getRepositoryId();
 		}
 
@@ -1791,7 +1790,8 @@ public class RegistryController extends BaseController
 					}
 					else
 					{
-						SiteNodeVO siteNodeVO = SiteNodeController.getSiteNodeVOWithId(siteNodeVersion.getSiteNodeId(), db);
+						SiteNode siteNode = SiteNodeController.getController().getSmallSiteNodeWithId(siteNodeVersion.getSiteNodeId(), db);
+						SiteNodeVO siteNodeVO = siteNode.getValueObject();//SiteNodeController.getSiteNodeVOWithId(siteNodeVersion.getSiteNodeId(), db);
 	            		SiteNodeVersionVO latestSiteNodeVersion = SiteNodeVersionController.getController().getLatestActiveSiteNodeVersionVO(db, siteNodeVersion.getSiteNodeId());
 	            		if (latestSiteNodeVersion != null && latestSiteNodeVersion.getSiteNodeVersionId() != siteNodeVersion.getSiteNodeVersionId())
 	                	{

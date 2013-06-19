@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+#beginManagementTool("tool.managementtool.viewAlreadyDeletingRepository.header" "tool.managementtool.viewAlreadyDeletingRepository.header" "repositoryId=$repositoryId&name=$name")
+
+<div class="fullymarginalized">
+	<table class="managementtooledit" cellpadding="2" cellspacing="2" border="0" width="100%" height="30">
+		<tr>
+			<td>
+				##$ui.getString("images.managementtool.buttons.cancel")
+				Delete already in progress
+				##THIS IS ADDED ALREADY <a href="DeleteRepository!showProcesses.action?processId=$processId&observer=true&returnAddress=ViewListRepository.action">Gå till borttagningsprocessen</a>
+			</td>
+		</tr>
+	</table>
+</div>
+</body>
+</html>
+
+

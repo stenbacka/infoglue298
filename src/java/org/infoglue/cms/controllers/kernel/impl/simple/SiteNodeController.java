@@ -23,9 +23,6 @@
 
 package org.infoglue.cms.controllers.kernel.impl.simple;
 
-import java.io.File;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
@@ -65,23 +62,17 @@ import org.infoglue.cms.entities.structure.SiteNodeVO;
 import org.infoglue.cms.entities.structure.SiteNodeVersion;
 import org.infoglue.cms.entities.structure.SiteNodeVersionVO;
 import org.infoglue.cms.entities.structure.impl.simple.SiteNodeImpl;
-import org.infoglue.cms.entities.structure.impl.simple.SmallSiteNodeImpl;
 import org.infoglue.cms.entities.structure.impl.simple.SiteNodeVersionImpl;
+import org.infoglue.cms.entities.structure.impl.simple.SmallSiteNodeImpl;
 import org.infoglue.cms.entities.structure.impl.simple.SmallSiteNodeVersionImpl;
 import org.infoglue.cms.exception.Bug;
 import org.infoglue.cms.exception.ConstraintException;
 import org.infoglue.cms.exception.SystemException;
-import org.infoglue.cms.io.FileHelper;
 import org.infoglue.cms.security.InfoGluePrincipal;
 import org.infoglue.cms.util.CmsPropertyHandler;
 import org.infoglue.cms.util.ConstraintExceptionBuffer;
-import org.infoglue.cms.util.DateHelper;
-import org.infoglue.cms.util.StringManager;
-import org.infoglue.cms.util.StringManagerFactory;
 import org.infoglue.cms.util.XMLHelper;
 import org.infoglue.cms.util.mail.MailServiceFactory;
-import org.infoglue.deliver.util.CacheController;
-import org.infoglue.deliver.util.VelocityTemplateProcessor;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
@@ -132,14 +123,18 @@ public class SiteNodeController extends BaseController
 		return siteNodeList;
 	}
 
+	public SiteNode getSmallSiteNodeWithId(Integer siteNodeId, Database db) throws SystemException, Bug
+	{
+		return (SiteNode) getObjectWithId(SmallSiteNodeImpl.class, siteNodeId, db);
+	}
+	
 	/**
 	 * This method gets the siteNodeVO with the given id
 	 */
-	 
-    public SiteNodeVO getSiteNodeVOWithId(Integer siteNodeId) throws SystemException, Bug
-    {
+	public SiteNodeVO getSiteNodeVOWithId(Integer siteNodeId) throws SystemException, Bug
+	{
 		return (SiteNodeVO) getVOWithId(SiteNodeImpl.class, siteNodeId);
-    }
+	}
 
 	/**
 	 * This method gets the siteNodeVO with the given id
@@ -197,7 +192,13 @@ public class SiteNodeController extends BaseController
     }
     
 
-	/**
+	public void deleteSiteNodesInRepository(Integer repositoryId, InfoGluePrincipal infogluePrincipal, boolean forceDelete, Database db) throws Exception
+	{
+		SiteNode siteNode = getRootSmallSiteNode(repositoryId, db);
+		SiteNodeController.getController().delete(siteNode.getValueObject(), db, forceDelete, infogluePrincipal, true);
+	}
+
+    /**
 	 * This method deletes a siteNode and also erases all the children and all versions.
 	 */
 	    
@@ -279,22 +280,26 @@ public class SiteNodeController extends BaseController
 	 */
 	public void delete(SiteNodeVO siteNodeVO, Database db, boolean forceDelete, InfoGluePrincipal infogluePrincipal, Map<String, List<ReferenceBean>> contactPersons, boolean excludeReferenceInSite) throws ConstraintException, SystemException, Exception
 	{
-		SiteNode siteNode = getSiteNodeWithId(siteNodeVO.getSiteNodeId(), db);
-		SiteNode parent = siteNode.getParentSiteNode();
+//		SiteNode siteNode = getSiteNodeWithId(siteNodeVO.getSiteNodeId(), db);
+//		SiteNode parent = siteNode.getParentSiteNode();
 		boolean notifyResponsibleOnReferenceChange = CmsPropertyHandler.getNotifyResponsibleOnReferenceChange();
-		if(parent != null)
+		if(siteNodeVO.getParentSiteNodeId() != null)
 		{
-			Iterator childSiteNodeIterator = parent.getChildSiteNodes().iterator();
+			System.out.println("SN parent");
+			List<SiteNode> children = getSmallSiteNodeChildrenList(siteNodeVO.getParentSiteNodeId(), db);
+			Iterator<SiteNode> childSiteNodeIterator = children.iterator();
 			while(childSiteNodeIterator.hasNext())
 			{
-			    SiteNode candidate = (SiteNode)childSiteNodeIterator.next();
-			    if(candidate.getId().equals(siteNodeVO.getSiteNodeId()))
-			        deleteRecursive(siteNode, childSiteNodeIterator, db, forceDelete, infogluePrincipal, contactPersons, notifyResponsibleOnReferenceChange, excludeReferenceInSite);
+				SiteNode candidate = (SiteNode)childSiteNodeIterator.next();
+				if(candidate.getId().equals(siteNodeVO.getSiteNodeId()))
+					deleteRecursive(candidate, childSiteNodeIterator, db, forceDelete, infogluePrincipal, contactPersons, notifyResponsibleOnReferenceChange, excludeReferenceInSite);
 			}
 		}
 		else
 		{
-		    deleteRecursive(siteNode, null, db, forceDelete, infogluePrincipal, contactPersons, notifyResponsibleOnReferenceChange, excludeReferenceInSite);
+			System.out.println("SN no parent");
+			SiteNode siteNode = getSmallSiteNodeWithId(siteNodeVO.getSiteNodeId(), db);
+			deleteRecursive(siteNode, null, db, forceDelete, infogluePrincipal, contactPersons, notifyResponsibleOnReferenceChange, excludeReferenceInSite);
 		}
 	}
 
@@ -304,28 +309,28 @@ public class SiteNodeController extends BaseController
 	 * This method is a mess as we had a problem with the lazy-loading and transactions. 
 	 * We have to begin and commit all the time...
 	 */
-	
-    private void deleteRecursive(SiteNode siteNode, Iterator parentIterator, Database db, boolean forceDelete, InfoGluePrincipal infoGluePrincipal, Map<String, List<ReferenceBean>> contactPersons, boolean notifyContactPersons, boolean excludeReferencesInSite) throws ConstraintException, SystemException, Exception
-    {
-        List<ReferenceBean> referenceBeanList = RegistryController.getController().getReferencingObjectsForSiteNode(siteNode.getId(), -1, excludeReferencesInSite, db);
+
+	private void deleteRecursive(SiteNode siteNode, Iterator<SiteNode> parentIterator, Database db, boolean forceDelete, InfoGluePrincipal infoGluePrincipal, Map<String, List<ReferenceBean>> contactPersons, boolean notifyContactPersons, boolean excludeReferencesInSite) throws ConstraintException, SystemException, Exception
+	{
+		List<ReferenceBean> referenceBeanList = RegistryController.getController().getReferencingObjectsForSiteNode(siteNode.getSiteNodeId(), -1, excludeReferencesInSite, db);
 
 		if(referenceBeanList != null && referenceBeanList.size() > 0 && !forceDelete)
 			throw new ConstraintException("SiteNode.stateId", "3405");
 
-        @SuppressWarnings("unchecked")
-		Collection<SiteNode> children = siteNode.getChildSiteNodes();
-		Iterator<SiteNode> i = children.iterator();
-		while(i.hasNext())
+		List<SiteNode> children = getSmallSiteNodeChildrenList(siteNode.getSiteNodeId(), db);
+		System.out.println("SN children: " + children.size());
+		Iterator<SiteNode> childIterator = children.iterator();
+		while(childIterator.hasNext())
 		{
-			SiteNode childSiteNode = i.next();
-			deleteRecursive(childSiteNode, i, db, forceDelete, infoGluePrincipal, contactPersons, notifyContactPersons, excludeReferencesInSite);
-   		}
-		siteNode.setChildSiteNodes(new ArrayList<SiteNode>());
+			SiteNode childSiteNode = childIterator.next();
+			deleteRecursive(childSiteNode, childIterator, db, forceDelete, infoGluePrincipal, contactPersons, notifyContactPersons, excludeReferencesInSite);
+		}
+		// TODO does this need to be replaced?
+		//siteNode.setChildSiteNodes(new ArrayList<SiteNode>());
 
 		if(forceDelete || getIsDeletable(siteNode, infoGluePrincipal, db))
-	    {
-			SiteNodeVersionController.deleteVersionsForSiteNode(siteNode, db, infoGluePrincipal);
-
+		{
+			SiteNodeVersionController.getController().deleteSiteNodeVersionsForSiteNodeWithId(siteNode.getSiteNodeId(), false, infoGluePrincipal, db);
 			ServiceBindingController.deleteServiceBindingsReferencingSiteNode(siteNode, db);
 
 			if (!notifyContactPersons)
@@ -342,49 +347,48 @@ public class SiteNodeController extends BaseController
 			}
 
 			if(parentIterator != null) 
-			    parentIterator.remove();
+				parentIterator.remove();
 
 			db.remove(siteNode);
-	    }
-	    else
-    	{
-    		throw new ConstraintException("SiteNodeVersion.stateId", "3400");
-    	}
-    }
+		}
+		else
+		{
+			throw new ConstraintException("SiteNodeVersion.stateId", "3400");
+		}
+	}
 
 	/**
 	 * This method returns true if the sitenode does not have any published siteNodeversions or 
 	 * are restricted in any other way.
 	 */
-	
 	private static boolean getIsDeletable(SiteNode siteNode, InfoGluePrincipal infogluePrincipal, Database db) throws SystemException, Exception
 	{
 		boolean isDeletable = true;
-		
-		SiteNodeVersion latestSiteNodeVersion = SiteNodeVersionController.getController().getLatestActiveSiteNodeVersion(db, siteNode.getId());
-		if(latestSiteNodeVersion != null && latestSiteNodeVersion.getIsProtected().equals(SiteNodeVersionVO.YES))
+
+		SiteNodeVersionVO latestSiteNodeVersionVO = SiteNodeVersionController.getController().getLatestActiveSiteNodeVersionVO(db, siteNode.getId());
+		if(latestSiteNodeVersionVO != null && latestSiteNodeVersionVO.getIsProtected().equals(SiteNodeVersionVO.YES))
 		{
-			boolean hasAccess = AccessRightController.getController().getIsPrincipalAuthorized(db, infogluePrincipal, "SiteNodeVersion.DeleteSiteNode", "" + latestSiteNodeVersion.getId());
-			if(!hasAccess)
+			boolean hasAccess = AccessRightController.getController().getIsPrincipalAuthorized(db, infogluePrincipal, "SiteNodeVersion.DeleteSiteNode", "" + latestSiteNodeVersionVO.getId());
+			if (!hasAccess)
 				return false;
 		}
-		
-        Collection siteNodeVersions = siteNode.getSiteNodeVersions();
-    	if(siteNodeVersions != null)
-    	{
-	        Iterator versionIterator = siteNodeVersions.iterator();
+
+		List<SiteNodeVersion> siteNodeVersions = SiteNodeVersionController.getController().getSiteNodeVersionListForSiteNode(siteNode.getSiteNodeId(), db);
+		if(siteNodeVersions != null)
+		{
+			Iterator<SiteNodeVersion> versionIterator = siteNodeVersions.iterator();
 			while (versionIterator.hasNext()) 
-	        {
-	        	SiteNodeVersion siteNodeVersion = (SiteNodeVersion)versionIterator.next();
-	        	if(siteNodeVersion.getStateId().intValue() == SiteNodeVersionVO.PUBLISHED_STATE.intValue() && siteNodeVersion.getIsActive().booleanValue() == true)
-	        	{
-	        		logger.warn("The siteNode had a published version so we cannot delete it..");
+			{
+				SiteNodeVersion siteNodeVersion = versionIterator.next();
+				if(siteNodeVersion.getStateId().intValue() == SiteNodeVersionVO.PUBLISHED_STATE.intValue() && siteNodeVersion.getIsActive().booleanValue() == true)
+				{
+					logger.warn("The siteNode had a published version so we cannot delete it..");
 					isDeletable = false;
-	        		break;
-	        	}
-		    }		
-    	}
-    	
+					break;
+				}
+			}
+		}
+
 		return isDeletable;	
 	}
 
@@ -610,22 +614,22 @@ public class SiteNodeController extends BaseController
 
 	public List<SiteNodeVO> getSiteNodeChildrenVOList(Integer parentSiteNodeId, Database db) throws SystemException, Exception
 	{
-    	if(parentSiteNodeId == null)
+		if(parentSiteNodeId == null)
 		{
 			return null;
 		}
 
-    	List<SiteNodeVO> siteNodeVOList = new ArrayList<SiteNodeVO>();
+		List<SiteNodeVO> siteNodeVOList = new ArrayList<SiteNodeVO>();
 
-        OQLQuery oql = db.getOQLQuery( "SELECT s FROM org.infoglue.cms.entities.structure.impl.simple.SmallSiteNodeImpl s WHERE s.parentSiteNode.siteNodeId = $1 ORDER BY s.siteNodeId");
+		OQLQuery oql = db.getOQLQuery( "SELECT s FROM org.infoglue.cms.entities.structure.impl.simple.SmallSiteNodeImpl s WHERE s.parentSiteNode.siteNodeId = $1 ORDER BY s.siteNodeId");
 		oql.bind(parentSiteNodeId);
 
-    	QueryResults results = oql.execute(Database.ReadOnly);
+		QueryResults results = oql.execute(Database.ReadOnly);
 
 		while (results.hasMore()) 
-        {
-        	SiteNode siteNode = (SiteNode)results.next();
-       	    siteNodeVOList.add(siteNode.getValueObject());
+		{
+			SiteNode siteNode = (SiteNode)results.next();
+			siteNodeVOList.add(siteNode.getValueObject());
 		}
 
 		results.close();
@@ -634,10 +638,60 @@ public class SiteNodeController extends BaseController
 		return siteNodeVOList;
 	}
 
+	public List<SiteNode> getSmallSiteNodeChildrenList(Integer parentSiteNodeId) throws SystemException
+	{
+		Database db = CastorDatabaseService.getDatabase();
+
+		List<SiteNode> childList = null;
+
+		try
+		{
+			beginTransaction(db);
+
+			childList = getSmallSiteNodeChildrenList(parentSiteNodeId, db);
+
+			commitTransaction(db);
+		}
+		catch(Exception ex)
+		{
+			logger.error("An error occurred so we should not complete the transaction. Message: " + ex);
+			logger.warn("An error occurred so we should not complete the transaction.", ex);
+			rollbackTransaction(db);
+			throw new SystemException(ex.getMessage());
+		}
+
+		return childList;
+	}
+
+	public List<SiteNode> getSmallSiteNodeChildrenList(Integer parentSiteNodeId, Database db) throws SystemException, Exception
+	{
+		if (parentSiteNodeId == null)
+		{
+			return null;
+		}
+
+		List<SiteNode> siteNodeList = new ArrayList<SiteNode>();
+
+		OQLQuery oql = db.getOQLQuery( "SELECT s FROM org.infoglue.cms.entities.structure.impl.simple.SmallSiteNodeImpl s WHERE s.parentSiteNode.siteNodeId = $1 ORDER BY s.siteNodeId");
+		oql.bind(parentSiteNodeId);
+
+		QueryResults results = oql.execute();
+
+		while (results.hasMore()) 
+		{
+			SiteNode siteNode = (SiteNode)results.next();
+			siteNodeList.add(siteNode);
+		}
+
+		results.close();
+		oql.close();
+
+		return siteNodeList;
+	}
+
 	/**
 	 * This method returns a list of the children a siteNode has.
 	 */
-   	
 	public List getSiteNodeChildren(Integer parentSiteNodeId) throws ConstraintException, SystemException
 	{
 		Database db = CastorDatabaseService.getDatabase();
@@ -652,10 +706,10 @@ public class SiteNodeController extends BaseController
 			SiteNode siteNode = getSiteNodeWithId(parentSiteNodeId, db);
 			Collection children = siteNode.getChildSiteNodes();
 			childrenVOList = SiteNodeController.toVOList(children);
-        	
+
 			//If any of the validations or setMethods reported an error, we throw them up now before create.
 			ceb.throwIfNotEmpty();
-            
+
 			commitTransaction(db);
 		}
 		catch(ConstraintException ce)
@@ -670,9 +724,9 @@ public class SiteNodeController extends BaseController
 			rollbackTransaction(db);
 			throw new SystemException(e.getMessage());
 		}
-        
+
 		return childrenVOList;
-	} 
+	}
 	
     
     /**
@@ -802,6 +856,26 @@ public class SiteNodeController extends BaseController
 		results.close();
 		oql.close();
 
+		return siteNode;
+	}
+
+	public SiteNode getRootSmallSiteNode(Integer repositoryId, Database db) throws ConstraintException, SystemException, Exception
+	{
+		SiteNode siteNode = null;
+		
+		OQLQuery oql = db.getOQLQuery( "SELECT s FROM org.infoglue.cms.entities.structure.impl.simple.SmallSiteNodeImpl s WHERE is_undefined(s.parentSiteNode) AND s.repositoryId = $1");
+		oql.bind(repositoryId);
+		
+		QueryResults results = oql.execute();
+		
+		if (results.hasMore()) 
+		{
+			siteNode = (SiteNode)results.next();
+		}
+		
+		results.close();
+		oql.close();
+		
 		return siteNode;
 	}
 

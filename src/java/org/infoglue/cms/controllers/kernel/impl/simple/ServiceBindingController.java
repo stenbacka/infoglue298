@@ -387,7 +387,7 @@ public class ServiceBindingController extends BaseController
 	 */
 
 	public static void deleteServiceBindingsReferencingSiteNodeVersion(SiteNodeVersion siteNodeVersion, Database db) throws ConstraintException, SystemException, Exception
-	{		
+	{
 		OQLQuery oql = db.getOQLQuery( "SELECT sb FROM org.infoglue.cms.entities.structure.impl.simple.ServiceBindingImpl sb WHERE sb.siteNodeVersion = $1 ORDER BY sb.serviceBindingId");
 		oql.bind(siteNodeVersion);
 		
@@ -411,7 +411,26 @@ public class ServiceBindingController extends BaseController
 		
 		results.close();
 		oql.close();
-	}       
+	}
+
+	public List<ServiceBinding> getServiceBindingsReferencingSiteNodeVersion(SiteNodeVersion siteNodeVersion, Database db) throws ConstraintException, SystemException, Exception
+	{
+		List<ServiceBinding> result = new ArrayList<ServiceBinding>();
+		OQLQuery oql = db.getOQLQuery( "SELECT sb FROM org.infoglue.cms.entities.structure.impl.simple.ServiceBindingImpl sb WHERE sb.siteNodeVersion = $1");
+		oql.bind(siteNodeVersion);
+
+		QueryResults results = oql.execute();
+		logger.info("Fetching entity in read/write mode");
+		while(results.hasMore()) 
+		{
+			ServiceBinding serviceBinding = (ServiceBindingImpl)results.next();
+			result.add(serviceBinding);
+		}
+
+		results.close();
+		oql.close();
+		return result;
+	}
 
 	/**
 	 * This method deletes a service binding an all associated qualifyers.

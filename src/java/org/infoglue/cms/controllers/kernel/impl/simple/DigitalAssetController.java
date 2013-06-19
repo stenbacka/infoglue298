@@ -34,7 +34,6 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -45,7 +44,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
-import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
 import org.apache.log4j.Logger;
@@ -53,14 +51,12 @@ import org.exolab.castor.jdo.Database;
 import org.exolab.castor.jdo.OQLQuery;
 import org.exolab.castor.jdo.QueryResults;
 import org.infoglue.cms.applications.common.VisualFormatter;
-import org.infoglue.cms.applications.databeans.OptimizationBeanList;
 import org.infoglue.cms.entities.content.Content;
 import org.infoglue.cms.entities.content.ContentVersion;
 import org.infoglue.cms.entities.content.ContentVersionVO;
 import org.infoglue.cms.entities.content.DigitalAsset;
 import org.infoglue.cms.entities.content.DigitalAssetVO;
 import org.infoglue.cms.entities.content.impl.simple.DigitalAssetImpl;
-import org.infoglue.cms.entities.content.impl.simple.MediumContentImpl;
 import org.infoglue.cms.entities.content.impl.simple.MediumDigitalAssetImpl;
 import org.infoglue.cms.entities.content.impl.simple.SmallDigitalAssetImpl;
 import org.infoglue.cms.entities.kernel.BaseEntityVO;
@@ -74,12 +70,10 @@ import org.infoglue.cms.exception.ConstraintException;
 import org.infoglue.cms.exception.SystemException;
 import org.infoglue.cms.security.InfoGluePrincipal;
 import org.infoglue.cms.util.CmsPropertyHandler;
-import org.infoglue.cms.util.ConstraintExceptionBuffer;
 import org.infoglue.cms.util.graphics.ThumbnailGenerator;
 import org.infoglue.deliver.controllers.kernel.impl.simple.LanguageDeliveryController;
 import org.infoglue.deliver.util.CacheController;
 import org.infoglue.deliver.util.HttpHelper;
-import org.infoglue.deliver.util.Timer;
 
 /**
  * @author Mattias Bogeblad
@@ -696,6 +690,25 @@ public class DigitalAssetController extends BaseController
 		return digitalAssetVOList;
     }
 
+	public static List<DigitalAsset> getMediumDigitalAssetList(Integer contentVersionId, Database db) throws Exception
+	{
+		List<DigitalAsset> digitalAssetList = new ArrayList<DigitalAsset>();
+
+		OQLQuery oql = db.getOQLQuery( "SELECT cv FROM org.infoglue.cms.entities.content.impl.simple.MediumDigitalAssetImpl cv WHERE cv.owningContent.contentId = $1 AND cv.stateId = $2 AND cv.isActive = $3 ORDER BY cv.contentVersionId desc");
+		oql.bind(contentVersionId);
+		QueryResults results = oql.execute(Database.ReadOnly);
+
+		while (results.hasMore()) 
+		{
+			DigitalAsset digitalAsset = (DigitalAsset)results.next();
+			digitalAssetList.add(digitalAsset);
+		}
+
+		results.close();
+		oql.close();
+		return digitalAssetList;
+	}
+
 	/**
 	 * This method should return a list of those digital assets the contentVersion has.
 	 */
@@ -853,6 +866,7 @@ public class DigitalAssetController extends BaseController
 	public void deleteByContentVersion(ContentVersion contentVersion, Database db) throws Exception 
 	{
 		Collection digitalAssets = contentVersion.getDigitalAssets();
+		System.out.println("DA digitalAssets: " + digitalAssets.size());
 		Iterator digitalAssetsIterator = digitalAssets.iterator();
 		while(digitalAssetsIterator.hasNext())
 		{
@@ -872,6 +886,31 @@ public class DigitalAssetController extends BaseController
 				db.remove(currentDigitalAsset);
 			}
 		}
+	}
+
+	public void deleteByContentVersionId(Integer contentVersionId, Database db) throws Exception 
+	{
+//		@SuppressWarnings("unchecked")
+//		Collection<DigitalAsset> digitalAssets = contentVersion.getSmallDigitalAssets();
+//		System.out.println("DA digitalAssets: " + digitalAssets.size());
+//		Iterator<DigitalAsset> digitalAssetsIterator = digitalAssets.iterator();
+//		while(digitalAssetsIterator.hasNext())
+//		{
+//			DigitalAsset currentDigitalAsset = digitalAssetsIterator.next();
+//			if(currentDigitalAsset.getContentVersions().size() > 1)
+//			{
+//				logger.info("Size was " + currentDigitalAsset.getContentVersions().size() + " so we just delete the relationship");
+//				currentDigitalAsset.getContentVersions().remove(contentVersion);
+//				digitalAssetsIterator.remove();
+//			}
+//			else
+//			{
+//				logger.info("Size was " + currentDigitalAsset.getContentVersions().size() + " so we delete the asset completely");
+//				currentDigitalAsset.getContentVersions().remove(contentVersion);
+//				digitalAssetsIterator.remove();
+//				db.remove(currentDigitalAsset);
+//			}
+//		}
 	}
 
 	

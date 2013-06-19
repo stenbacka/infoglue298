@@ -295,7 +295,7 @@ public class ExportRepositoryAction extends InfoGlueAbstractAction
 		String[] repositories = getRequest().getParameterValues("repositoryId");
 
 		String exportId = "Export_" + visualFormatter.formatDate(new Date(), "yyyy-MM-dd_HHmm");
-		ProcessBean processBean = ProcessBean.createProcessBean(ExportRepositoryAction.class.getName(), exportId);
+		ProcessBean processBean = ProcessBean.createProcessBean(ExportRepositoryAction.class.getName(), exportId, getInfoGluePrincipal());
 		processBean.setStatus(ProcessBean.RUNNING);
 		
 		OptimizedExportController.export(repositories, assetMaxSize, onlyPublishedVersions, exportFileName, processBean);
@@ -660,12 +660,12 @@ public class ExportRepositoryAction extends InfoGlueAbstractAction
 		}
 	}
 
-	public List<ProcessBean> getProcessBeans()
+	public List<ProcessBean> getProcessBeans() throws SystemException
 	{
 		return ProcessBean.getProcessBeans(ExportRepositoryAction.class.getName());
 	}
 
-	public List<ProcessBean> getFilteredProcessBeans()
+	public List<ProcessBean> getFilteredProcessBeans() throws SystemException
 	{
 		List<ProcessBean> processes = ProcessBean.getProcessBeans(ExportRepositoryAction.class.getName());
 
