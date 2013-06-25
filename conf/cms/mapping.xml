@@ -1269,6 +1269,36 @@
     </field>
   </class>
 
+  <class name="org.infoglue.cms.entities.content.impl.simple.DeleteFriendlyContentVersionImpl" identity="contentVersionId" key-generator="IDENTITY">
+    <description>ContentVersion</description>
+    <cache-type type="none"/>
+    <map-to table="cmContentVersion"/>
+    <field name="contentVersionId" type="java.lang.Integer">
+      <sql name="contentVersionId" type="integer" dirty="check" />
+    </field>
+    <field name="stateId" type="java.lang.Integer">
+      <sql name="stateId" type="integer" dirty="check" />
+    </field>
+    <field name="isActive" type="java.lang.Boolean">
+      <sql name="isActive" type="integer" dirty="check" />
+    </field>
+    <field name="contentId" type="java.lang.Integer">
+      <sql name="contentId"/>
+    </field>
+    <field name="languageId" type="java.lang.Integer">
+      <sql name="languageId"/>
+    </field>
+    <field name="versionModifier" type="java.lang.String">
+      <sql name="versionModifier" type="varchar" dirty="check" />
+    </field>
+    <field name="digitalAssets" type="org.infoglue.cms.entities.content.impl.simple.DeleteFriendlyDigitalAssetImpl" collection="collection" lazy="false">
+      <sql many-key="contentVersionId" many-table="cmContentVersionDigitalAsset"/>
+    </field>
+    <field name="contentCategories" type="org.infoglue.cms.entities.content.impl.simple.SmallContentCategoryImpl" collection="collection" lazy="true">
+      <sql many-key="contentVersionId" many-table="cmContentCategory"/>
+    </field>
+  </class>
+
   <class name="org.infoglue.cms.entities.content.impl.simple.SmallContentVersionImpl" identity="contentVersionId" key-generator="IDENTITY">
     <description>SmallContentVersion</description>
     <cache-type type="count-limited" capacity="20000"/>
@@ -1459,6 +1489,30 @@
     <field name="groupProperties" type="org.infoglue.cms.entities.management.impl.simple.GroupPropertiesImpl" lazy="true" collection="collection">
       <sql many-key="digitalAssetId" many-table="cmGroupPropertiesDigitalAsset"/>
     </field>
+  </class>
+
+  <class name="org.infoglue.cms.entities.content.impl.simple.DeleteFriendlyDigitalAssetImpl" identity="digitalAssetId" key-generator="IDENTITY">
+    <description>MediumDigitalAsset</description>
+    <cache-type type="unlimited" capacity="10000"/>
+    <map-to table="cmDigitalAsset"/>
+    <field name="digitalAssetId" type="java.lang.Integer">
+      <sql name="digitalAssetId" type="integer" dirty="check" />
+    </field>
+    <field name="assetKey" type="java.lang.String">
+      <sql name="assetKey" type="varchar" dirty="check" />
+    </field>
+    <field name="contentVersions" type="org.infoglue.cms.entities.content.impl.simple.DeleteFriendlyContentVersionImpl" lazy="false" collection="collection">
+      <sql many-key="digitalAssetId" many-table="cmContentVersionDigitalAsset"/>
+    </field>
+<!--     <field name="userProperties" type="org.infoglue.cms.entities.management.impl.simple.UserPropertiesImpl" lazy="true" collection="collection"> -->
+<!--       <sql many-key="digitalAssetId" many-table="cmUserPropertiesDigitalAsset"/> -->
+<!--     </field> -->
+<!--     <field name="roleProperties" type="org.infoglue.cms.entities.management.impl.simple.RolePropertiesImpl" lazy="true" collection="collection"> -->
+<!--       <sql many-key="digitalAssetId" many-table="cmRolePropertiesDigitalAsset"/> -->
+<!--     </field> -->
+<!--     <field name="groupProperties" type="org.infoglue.cms.entities.management.impl.simple.GroupPropertiesImpl" lazy="true" collection="collection"> -->
+<!--       <sql many-key="digitalAssetId" many-table="cmGroupPropertiesDigitalAsset"/> -->
+<!--     </field> -->
   </class>
 
 <!--  Mapping for DigitalAsset  -->

@@ -52,6 +52,8 @@ import org.infoglue.cms.entities.content.DigitalAssetVO;
 import org.infoglue.cms.entities.content.SmallestContentVersionVO;
 import org.infoglue.cms.entities.content.impl.simple.ContentImpl;
 import org.infoglue.cms.entities.content.impl.simple.ContentVersionImpl;
+import org.infoglue.cms.entities.content.impl.simple.DeleteFriendlyContentVersionImpl;
+import org.infoglue.cms.entities.content.impl.simple.DeleteFriendlyDigitalAssetImpl;
 import org.infoglue.cms.entities.content.impl.simple.ExportContentVersionImpl;
 import org.infoglue.cms.entities.content.impl.simple.MediumDigitalAssetImpl;
 import org.infoglue.cms.entities.content.impl.simple.SmallContentVersionImpl;
@@ -1031,13 +1033,13 @@ public class ContentVersionController extends BaseController
 
 	public void deleteContentVersionsForContentWithId(Integer contentId, boolean forceDelete, Database db) throws SystemException, Bug, Exception
 	{
-		List<ContentVersion> versions = getContentVersionListForContent(contentId, db);
+		List<DeleteFriendlyContentVersionImpl> versions = getDeleteFriendlyContentVersionListForContent(contentId, db);
 		System.out.println("CV versions: " + versions.size() + " contentId: " + contentId);
-		Iterator<ContentVersion> contentVersionIterator = versions.iterator();
+		Iterator<DeleteFriendlyContentVersionImpl> contentVersionIterator = versions.iterator();
 
 		while (contentVersionIterator.hasNext())
 		{
-			ContentVersion contentVersion = contentVersionIterator.next();
+			DeleteFriendlyContentVersionImpl contentVersion = contentVersionIterator.next();
 			if (!forceDelete && contentVersion.getStateId().intValue() == ContentVersionVO.PUBLISHED_STATE.intValue() && contentVersion.getIsActive().booleanValue() == true)
 			{
 				ContentVO contentVO = ContentController.getContentController().getContentVOWithId(contentId, db);
@@ -1045,7 +1047,21 @@ public class ContentVersionController extends BaseController
 			}
 
 			contentCategoryController.deleteByContentVersionId(contentVersion.getContentVersionId(), db);
-//			ContentVersion heavyVersion = getContentVersionWithId(contentVersion.getContentVersionId(), db);
+			Iterator<DeleteFriendlyDigitalAssetImpl> digitalAssetIt = contentVersion.getDigitalAssets().iterator();
+			DeleteFriendlyDigitalAssetImpl digitalAsset;
+			while (digitalAssetIt.hasNext())
+			{
+				digitalAsset = digitalAssetIt.next();
+				boolean success = digitalAsset.getContentVersions().remove(contentVersion);
+				System.out.println("Delete DA->CV binding: " + success);
+				digitalAssetIt.remove();
+				if (digitalAsset.getContentVersions().size() == 0)
+				{
+					System.out.println("Last reference to DA. removing...");
+					db.remove(digitalAsset);
+				}
+			}
+			System.out.println("CV.da-size: " + contentVersion.getDigitalAssets().size());
 //			DigitalAssetController.getController().deleteByContentVersion(heavyVersion, db);
 
 //			Content content = contentVersion.getOwningContent();
@@ -2584,7 +2600,25 @@ public class ContentVersionController extends BaseController
 		return contentVersionList;
 	}
 
+	private List<DeleteFriendlyContentVersionImpl> getDeleteFriendlyContentVersionListForContent(Integer contentId, Database db) throws SystemException, PersistenceException
+	{
+		List<DeleteFriendlyContentVersionImpl> contentVersionList = new ArrayList<DeleteFriendlyContentVersionImpl>();
 
+		OQLQuery oql = db.getOQLQuery( "SELECT cv FROM org.infoglue.cms.entities.content.impl.simple.DeleteFriendlyContentVersionImpl cv WHERE cv.contentId = $1" );
+		oql.bind(contentId);
+
+		QueryResults results = oql.execute();
+		while (results.hasMore())
+		{
+			DeleteFriendlyContentVersionImpl contentVersion = (DeleteFriendlyContentVersionImpl)results.next();
+			contentVersionList.add(contentVersion);
+		}
+
+		results.close();
+		oql.close();
+
+		return contentVersionList;
+	}
 
 	public boolean getIsContentDeletable(Integer contentId, Database db) throws PersistenceException, SystemException
 	{

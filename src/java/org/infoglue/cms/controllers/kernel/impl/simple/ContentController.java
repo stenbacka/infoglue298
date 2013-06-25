@@ -520,7 +520,7 @@ public class ContentController extends BaseController
 			ContentVersionController.getContentVersionController().deleteContentVersionsForContentWithId(content.getContentId(), params.forceDelete, db);
 
 			if(!params.skipServiceBindings)
-				ServiceBindingController.deleteServiceBindingsReferencingContent(content, db);
+//				ServiceBindingController.deleteServiceBindingsReferencingContent(content, db);
 
 			if (!params.notifyResponsibleOnReferenceChange)
 			{
