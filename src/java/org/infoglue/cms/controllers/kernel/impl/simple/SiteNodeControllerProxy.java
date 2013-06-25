@@ -165,22 +165,21 @@ public class SiteNodeControllerProxy extends SiteNodeController
 	*/
 	public void acDelete(InfoGluePrincipal infogluePrincipal, SiteNodeVO siteNodeVO) throws ConstraintException, SystemException, Bug, Exception
 	{
-		acDelete(infogluePrincipal, siteNodeVO, false);
+		acDelete(infogluePrincipal, siteNodeVO, null);
 	}
 
 	/**
 	 * This method deletes a sitenode after first checking that the user has rights to delete it.
 	 */
-	
-	public void acDelete(InfoGluePrincipal infogluePrincipal, SiteNodeVO siteNodeVO, boolean forceDelete) throws ConstraintException, SystemException, Bug, Exception
+	public void acDelete(InfoGluePrincipal infogluePrincipal, SiteNodeVO siteNodeVO, DeleteSiteNodeParams params) throws ConstraintException, SystemException, Bug, Exception
 	{
-		Map hashMap = new HashMap();
+		Map<String, Object> hashMap = new HashMap<String, Object>();
 		hashMap.put("siteNodeId", siteNodeVO.getId());
-    	
+
 		intercept(hashMap, "SiteNodeVersion.DeleteSiteNode", infogluePrincipal);
 
-		delete(siteNodeVO, infogluePrincipal, forceDelete);
-	}   
+		delete(siteNodeVO, infogluePrincipal, params);
+	}
 	
 	
 	/**

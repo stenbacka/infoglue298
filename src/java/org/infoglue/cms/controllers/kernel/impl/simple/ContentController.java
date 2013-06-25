@@ -318,21 +318,19 @@ public class ContentController extends BaseController
 	{
 		ContentVO contentVO = getRootContentVO(repositoryId, db);
 		DeleteContentParams deleteParams = new DeleteContentParams();
+		deleteParams.setForceDelete(forceDelete);
+		deleteParams.setExcludeReferencesInSite(true);
 		if(forceDelete)
 		{
 			deleteParams.setSkipRelationCheck(true);
-			deleteParams.setSkipServiceBindings(true);
-			deleteParams.setForceDelete(true);
-			deleteParams.setExcludeReferencesInSite(true);
+//			deleteParams.setSkipServiceBindings(true);
 		}
 		else
 		{
 			deleteParams.setSkipRelationCheck(false);
-			deleteParams.setSkipServiceBindings(false);
-			deleteParams.setForceDelete(false);
-			deleteParams.setExcludeReferencesInSite(true);
+//			deleteParams.setSkipServiceBindings(false);
 		}
-		ContentController.getContentController().delete(contentVO, infogluePrincipal, deleteParams, db);
+		delete(contentVO, infogluePrincipal, deleteParams, db);
 	}
 
 	public static class DeleteContentParams

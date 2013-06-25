@@ -36,6 +36,7 @@ import org.exolab.castor.jdo.OQLQuery;
 import org.exolab.castor.jdo.PersistenceException;
 import org.exolab.castor.jdo.QueryResults;
 import org.infoglue.cms.applications.databeans.ProcessBean;
+import org.infoglue.cms.controllers.kernel.impl.simple.SiteNodeController.DeleteSiteNodeParams;
 import org.infoglue.cms.entities.content.Content;
 import org.infoglue.cms.entities.content.ContentVO;
 import org.infoglue.cms.entities.kernel.BaseEntityVO;
@@ -125,7 +126,9 @@ public class RepositoryController extends BaseController
 						RepositoryLanguageController.getController().deleteRepositoryLanguages(repository, db);
 
 						processBean.updateProcess("Deleting SiteNodes");
-						SiteNodeController.getController().deleteSiteNodesInRepository(repositoryVO.getRepositoryId(), infoGluePrincipal, forceDelete, db);
+						DeleteSiteNodeParams params = new DeleteSiteNodeParams();
+						params.setForceDelete(forceDelete);
+						SiteNodeController.getController().deleteSiteNodesInRepository(repositoryVO.getRepositoryId(), infoGluePrincipal, params, db);
 						processBean.updateProcess("Deleting Contents");
 						ContentController.getContentController().deleteContentInRepository(repositoryVO.getRepositoryId(), infoGluePrincipal, forceDelete, db);
 						db.remove(repository);

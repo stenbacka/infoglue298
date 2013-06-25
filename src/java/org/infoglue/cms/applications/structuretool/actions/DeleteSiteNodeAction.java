@@ -31,6 +31,7 @@ import org.infoglue.cms.applications.common.actions.InfoGlueAbstractAction;
 import org.infoglue.cms.applications.databeans.ReferenceBean;
 import org.infoglue.cms.controllers.kernel.impl.simple.RegistryController;
 import org.infoglue.cms.controllers.kernel.impl.simple.SiteNodeController;
+import org.infoglue.cms.controllers.kernel.impl.simple.SiteNodeController.DeleteSiteNodeParams;
 import org.infoglue.cms.controllers.kernel.impl.simple.SiteNodeControllerProxy;
 import org.infoglue.cms.entities.structure.SiteNodeVO;
 import org.infoglue.cms.util.CmsPropertyHandler;
@@ -77,10 +78,10 @@ public class DeleteSiteNodeAction extends InfoGlueAbstractAction
 		}
 		if(!forceDelete && this.referenceBeanList != null && this.referenceBeanList.size() > 0)
 		{
-		    return "showRelations";
+			return "showRelations";
 		}
-	    else
-	    {
+		else
+		{
 			try
 			{
 				this.parentSiteNodeId = SiteNodeController.getParentSiteNode(this.siteNodeVO.getSiteNodeId()).getSiteNodeId();
@@ -90,10 +91,12 @@ public class DeleteSiteNodeAction extends InfoGlueAbstractAction
 				logger.info("The siteNode must have been a root-siteNode because we could not find a parent.");
 			}
 
-			SiteNodeControllerProxy.getSiteNodeControllerProxy().acDelete(this.getInfoGluePrincipal(), this.siteNodeVO, forceDelete);
+			DeleteSiteNodeParams params = new DeleteSiteNodeParams();
+			params.setForceDelete(forceDelete);
+			SiteNodeControllerProxy.getSiteNodeControllerProxy().acDelete(this.getInfoGluePrincipal(), this.siteNodeVO, params);
 
 			return "success";
-	    }
+		}
 	}
 
 	protected String doExecute() throws Exception 

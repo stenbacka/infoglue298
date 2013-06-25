@@ -624,9 +624,6 @@ public class SiteNodeVersionController extends BaseController
     }        
 
 
-    /**
-     * @deprecated This method uses heavy objects. Use {@link #deleteSiteNodeVersionsForSiteNodeWithId(Integer, Database)} instead.
-     */
 	public static void deleteVersionsForSiteNodeWithId(Integer siteNodeId) throws ConstraintException, SystemException, Bug
     {
     	Database db = CastorDatabaseService.getDatabase();
@@ -668,89 +665,25 @@ public class SiteNodeVersionController extends BaseController
 		}
     }
 
-	public void deleteSiteNodeVersionsForSiteNodeWithId(Integer siteNodeId, boolean alsoDeleteMetaInfo, InfoGluePrincipal infoGluePrincipal) throws SystemException, Bug, Exception
-	{
-		Database db = CastorDatabaseService.getDatabase();
-		beginTransaction(db);
-		try
-		{
-			deleteSiteNodeVersionsForSiteNodeWithId(siteNodeId, alsoDeleteMetaInfo, infoGluePrincipal, db);
-			commitTransaction(db);
-		}
-		catch(ConstraintException ce)
-		{
-			logger.warn("An error occurred so we should not complete the transaction.", ce);
-			rollbackTransaction(db);
-			throw ce;
-		}
-		catch(Exception ex)
-		{
-			logger.error("An error occurred so we should not complete the transaction:" + ex);
-			logger.warn("An error occurred so we should not complete the transaction." + ex, ex);
-			rollbackTransaction(db);
-			throw new SystemException(ex.getMessage());
-		}
-	}
-
-	public void deleteSiteNodeVersionsForSiteNodeWithId(Integer siteNodeId, boolean alsoDeleteMetaInfo, InfoGluePrincipal infoGluePrincipal, Database db) throws SystemException, Bug, Exception
-	{
-		List<SiteNodeVersion> versions = getSiteNodeVersionListForSiteNode(siteNodeId, db);
-		System.out.println("SNV versions: " + versions.size());
-		Iterator<SiteNodeVersion> siteNodeVersionIterator = versions.iterator();
-
-		boolean metaInfoContentDeleted = false;
-		while (siteNodeVersionIterator.hasNext())
-		{
-			SiteNodeVersion siteNodeVersion = (SiteNodeVersion)siteNodeVersionIterator.next();
-//			List<ServiceBinding> serviceBindings = ServiceBindingController.getController().getServiceBindingsReferencingSiteNodeVersion(siteNodeVersion, db);
-//			System.out.println("SNV bindings: " + serviceBindings.size());
-//			Iterator<ServiceBinding> serviceBindingIterator = serviceBindings.iterator();
-//			while(serviceBindingIterator.hasNext())
-//			{
-//				ServiceBinding serviceBinding = serviceBindingIterator.next();
-//				if (serviceBinding.getAvailableServiceBinding().getName().equalsIgnoreCase("Meta information"))
-//				{
-//					if (!metaInfoContentDeleted && alsoDeleteMetaInfo)
-//					{
-//						try
-//						{
-//							deleteMetaInfoForSiteNodeVersion(db, serviceBinding, infoGluePrincipal);
-//						}
-//						catch(Exception e)
-//						{
-//							logger.warn("An error was thrown when we tried to delete the meta info for the version. Could be deleted already");
-//						}
-//						metaInfoContentDeleted = true;
-//					}
-//				}
-//				serviceBindingIterator.remove();
-//				db.remove(serviceBinding);
-//			}
-
-			logger.info("Deleting siteNodeVersion: " + siteNodeVersion.getSiteNodeVersionId());
-			siteNodeVersionIterator.remove();
-			db.remove(siteNodeVersion);
-		}
-	}
-
 	/** 
 	 * This methods deletes all versions for the siteNode sent in
 	 */
-
-	public static void deleteVersionsForSiteNode(SiteNode siteNode, Database db, InfoGluePrincipal infoGluePrincipal) throws ConstraintException, SystemException, Bug, Exception
+	public void deleteVersionsForSiteNode(SiteNode siteNode, Database db, InfoGluePrincipal infoGluePrincipal) throws ConstraintException, SystemException, Bug, Exception
 	{
-		Collection siteNodeVersions = Collections.synchronizedCollection(siteNode.getSiteNodeVersions());
-		Iterator siteNodeVersionIterator = siteNodeVersions.iterator();
-			
+		@SuppressWarnings("unchecked")
+		Collection<SiteNodeVersion> siteNodeVersions = Collections.synchronizedCollection((Collection<SiteNodeVersion>)siteNode.getSiteNodeVersions());
+		Iterator<SiteNodeVersion> siteNodeVersionIterator = siteNodeVersions.iterator();
+
 		boolean metaInfoContentDeleted = false;
 		while (siteNodeVersionIterator.hasNext())
 		{
-			SiteNodeVersion siteNodeVersion = (SiteNodeVersion)siteNodeVersionIterator.next();
-			Collection serviceBindings = Collections.synchronizedCollection(siteNodeVersion.getServiceBindings());
-			Iterator serviceBindingIterator = serviceBindings.iterator();
+			SiteNodeVersion siteNodeVersion = siteNodeVersionIterator.next();
+			@SuppressWarnings("unchecked")
+			Collection<ServiceBinding> serviceBindings = Collections.synchronizedCollection((Collection<ServiceBinding>)siteNodeVersion.getServiceBindings());
+			Iterator<ServiceBinding> serviceBindingIterator = serviceBindings.iterator();
 			while(serviceBindingIterator.hasNext())
 			{
-				ServiceBinding serviceBinding = (ServiceBinding)serviceBindingIterator.next();
+				ServiceBinding serviceBinding = serviceBindingIterator.next();
 				if(serviceBinding.getAvailableServiceBinding().getName().equalsIgnoreCase("Meta information"))
 				{
 					if(!metaInfoContentDeleted)
@@ -774,7 +707,7 @@ public class SiteNodeVersionController extends BaseController
 					db.remove(serviceBinding);
 				}
 			}
-			
+
 			logger.info("Deleting siteNodeVersion:" + siteNodeVersion.getSiteNodeVersionId());
 			siteNodeVersionIterator.remove();
 			db.remove(siteNodeVersion);
