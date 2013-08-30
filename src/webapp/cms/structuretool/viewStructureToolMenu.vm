@@ -110,7 +110,6 @@
 
 		function expandTreeAfterLoaded()
 		{
-			console.log("I happen! Path: $path");
 			//alert("Loaded: $path")
 			#if($path != "")
 				#if($tree == "applet")
