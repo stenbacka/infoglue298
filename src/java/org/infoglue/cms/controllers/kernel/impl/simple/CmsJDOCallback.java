@@ -102,6 +102,11 @@ public class CmsJDOCallback implements CallbackInterceptor
 
     public Class loaded(Object object, short accessMode) throws Exception
     {
+//    	if (object.getClass().getName().equals(ContentImpl.class.getName()) || object.getClass().getName().equals(ContentVersionImpl.class.getName()) || object.getClass().getName().equals(DigitalAssetImpl.class.getName()))
+//    	{
+//    		System.out.println("BUSTED! " + object.getClass().getName() + " ID: " + ((IBaseEntity)object).getId());
+//    		Thread.dumpStack();
+//    	}
 		//System.out.println("Loaded " + object.getClass().getName() + " accessMode:" + accessMode);
     	/*
     	if(object.getClass().getName().indexOf(".SiteNodeImpl") > -1)
@@ -128,6 +133,12 @@ public class CmsJDOCallback implements CallbackInterceptor
 		//System.out.println("storing...:" + object + ":" + modified);
 		//Thread.dumpStack();
         // ( (Persistent) object ).jdoStore( modified );
+    	
+//    	if (object.getClass().getName().equals(ContentImpl.class.getName()) || object.getClass().getName().equals(ContentVersionImpl.class.getName()) || object.getClass().getName().equals(DigitalAssetImpl.class.getName()))
+//    	{
+//    		System.out.println("BUSTED! " + object.getClass().getName() + " ID: " + ((IBaseEntity)object).getId());
+//    		Thread.dumpStack();
+//    	}
    		
    		//logger.info("Should we store -------------->" + object + ":" + modified);
     	if (TransactionHistoryImpl.class.getName().indexOf(object.getClass().getName()) == -1 && 
@@ -657,6 +668,11 @@ public class CmsJDOCallback implements CallbackInterceptor
 
     public void updated(Object object) throws Exception
     {
+//    	if (object.getClass().getName().equals(org.infoglue.cms.entities.content.impl.simple.ContentImpl.class.getName()))
+//    	{
+//    		System.out.println("BUSTED!");
+//    		Thread.dumpStack();
+//    	}
         //System.out.println("updated...:" + object);
         // ( (Persistent) object ).jdoUpdate();
     	

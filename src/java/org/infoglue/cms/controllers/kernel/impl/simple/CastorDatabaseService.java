@@ -123,7 +123,7 @@ public class CastorDatabaseService //extends DatabaseService
 	 * Gets the current thread's database object and tries to commit the transaction. If the current thread
 	 * doesn't have a database object nothing is done.
 	 */
-	public synchronized static void commitThreadDatabase()
+	public synchronized static boolean commitThreadDatabase()
 	{
 		Database db = threadDatabase.get();
 
@@ -140,13 +140,14 @@ public class CastorDatabaseService //extends DatabaseService
 			{
 				logger.warn("Tried to commit a thread database but there was no database for the thread. This is not an error but under normal circumstances this should not happen.", ex);
 			}
-			return;
+			return false;
 		}
 
 		if(logger.isInfoEnabled() && db != null)
 		{
 			logger.info("Commit thread database for thread: " + Thread.currentThread().getId());
 		}
+		boolean success = true;
 		try
 		{
 			if (db.isActive())
@@ -158,8 +159,10 @@ public class CastorDatabaseService //extends DatabaseService
 		catch(Exception ex)
 		{
 			logger.warn("An error occurred when we tried to commit a thread transaction. Reason: " + ex.getMessage());
+			success = false;
 		}
 		threadDatabase.set(null);
+		return success;
 	}
 
 	/**

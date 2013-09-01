@@ -5,6 +5,7 @@
 #beginManagementTool("tool.common.viewProcesses.header" "tool.common.viewProcesses.header" "")
 
 <script type="text/javascript" src="script/jquery/jquery-1.2.6.min.js"></script>
+<script type="text/javascript" src="script/underscore/underscore.js"></script>
 
 
 <div class="fullymarginalized">
@@ -16,12 +17,22 @@
 		</tr>
 	</table>
 </div>
+<script type="underscore/template" id="processTemplate">
+<% _.each(processes, function(process) { %>
+	<p>Name: <%= process.processName %></p>
+	<ol>
+		<% _.each(process.processEvents, function(event) { %>
+			<li><%= event %></li>
+		<% }); %>
+	</ol>
+<% }); %>
+</script>
 <script type="text/javascript">
 //<![CDATA[
 	(function() {
+		var processTemplate = _.template(jQuery("#processTemplate").html());
 		function updateView()
 		{
-			console.log("Updatin... " + "$returnAddress");
 			jQuery.getJSON('ViewProcess!showProcessesAsJSON.action?returnAddress=$!returnAddress&processId=$!processId&processName=$!processName', function(data) {
 				if (data)
 				{
@@ -31,7 +42,7 @@
 					}
 					else
 					{
-						jQuery("#status").text(JSON.stringify(data));
+						jQuery("#status").html(processTemplate(data));
 					}
 				}
 			});
@@ -43,7 +54,7 @@
 				clearInterval(interval);
 			}
 		}, 1000);
-	})();
+	}());
 //]]>
 </script>
 </body>

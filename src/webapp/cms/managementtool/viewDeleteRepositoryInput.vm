@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+#beginManagementTool("tool.managementtool.deleteRepository.header" "tool.managementtool.deleteRepository.header" "")
+<div class="fullymarginalized">
+<body class="managementtool">
+	<form method="GET" action="DeleteRepository.action">
+		<input type="hidden" name="repositoryId" value="$repositoryId" />
+		<table cellpadding="2" cellspacing="2" border="0" width="100%" height="30">
+			<tr>
+				<td>$ui.getString("entity.Repository.name.label"): $name</td>
+			</tr>
+			<tr>
+				<td colspan="3" height="1"><img src="images/trans.gif" width="1" height="1"></td>
+			</tr>
+			<tr>
+				<td>
+					$ui.getString("tool.managementtool.deleteRepository.text")
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<label>
+						<input type="checkbox" name="skipServiceBindings" #if( $deleteServiceBindings == true ) checked="checked" #end />
+						$ui.getString("tool.managementtool.deleteRepository.deleteServiceBindings")
+					</label>
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<input type="image" src="images/okButtonBlue.gif" width="50" height="25" />
+					<a href="ViewListRepository.action">
+						<img src="images/cancelButtonBlue.gif" width="50" height="25" border="0" />
+					</a>
+				</td>
+			</tr>
+		</table>
+	</form>
+</div>
+</body>
+</html>

@@ -29,6 +29,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.MissingResourceException;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
@@ -36,6 +37,7 @@ import org.infoglue.cms.controllers.kernel.impl.simple.AccessRightController;
 import org.infoglue.cms.exception.AccessConstraintException;
 import org.infoglue.cms.exception.SystemException;
 import org.infoglue.cms.security.InfoGluePrincipal;
+import org.infoglue.cms.util.StringManager;
 
 /**
  * This bean allows for processes to give information about the process itself and what the status is.
@@ -135,7 +137,12 @@ public class ProcessBean
 
 	public static ProcessBean createProcessBean(String processName, String processId, InfoGluePrincipal principal)
 	{
-		ProcessBean processBean = new ProcessBean(processName, processId, principal.getName());
+		return createProcessBean(processName, processId, principal, null);
+	}
+
+	public static ProcessBean createProcessBean(String processName, String processId, InfoGluePrincipal principal, StringManager stringManager)
+	{
+		ProcessBean processBean = new ProcessBean(processName, processId, principal.getName(), stringManager);
 		getProcessBeans().add(processBean);
 
 		return processBean;
@@ -153,6 +160,7 @@ public class ProcessBean
 	private String processName;
 	private String processId;
 	private String initiator;
+	private transient StringManager stringManager;
 	private int status = NOT_STARTED;
 	// TODO should the dates really be initiated here? getFinished() will say that the process has finished even though it has not
 	private Date started = new Date();
@@ -160,7 +168,7 @@ public class ProcessBean
 	private transient boolean autoRemoveOnSuccess = false;
 
 	private String errorMessage;
-	// Write custom serializer so we don't get circular dependency
+	// TODO Write custom serializer so we don't get circular dependency
 	private transient Throwable exception;
 
 	private transient List<ProcessBeanListener> listeners = new ArrayList<ProcessBeanListener>();
@@ -170,13 +178,31 @@ public class ProcessBean
 
 	private ProcessBean(String processName, String processId)
 	{
-		this(processName, processId, null);
+		this(processName, processId, null, null);
 	}
-	private ProcessBean(String processName, String processId, String initiator)
+
+	private ProcessBean(String processName, String processId, String initiator, StringManager stringManager)
 	{
 		this.processName = processName;
 		this.processId = processId;
 		this.initiator = initiator;
+		this.stringManager = stringManager;
+	}
+	
+	private String processDescription(String eventDescription, Object[] args)
+	{
+		if (stringManager != null)
+		{
+			try
+			{
+				return stringManager.getString(eventDescription, args);
+			}
+			catch (MissingResourceException mrex)
+			{
+				logger.debug("The given event description was not a valid resource key. Event description: " + eventDescription);
+			}
+		}
+		return eventDescription;
 	}
 
 	/**
@@ -184,15 +210,33 @@ public class ProcessBean
 	 * 
 	 * @param eventDescription
 	 */
-	public void updateProcess(String eventDescription)
+	public void updateProcess(String eventDescription, Object... args)
 	{
+		eventDescription = processDescription(eventDescription, args);
 		processEvents.add(eventDescription);
 		// TODO Does this need to be synchronized with adding listeners?
 		for(ProcessBeanListener processBeanListener : listeners)
 		{
 			try
 			{
-	    		processBeanListener.processUpdated(eventDescription);
+				processBeanListener.processUpdated(eventDescription);
+			}
+			catch (Exception e) 
+			{
+				logger.error("Error updating ProcessBeanListener: " + e.getMessage());
+			}
+		}
+	}
+	
+	public void updateCurrentEvent(String eventDescription, Object... args)
+	{
+		eventDescription = processDescription(eventDescription, args);
+		processEvents.set(processEvents.size() - 1, eventDescription);
+		for(ProcessBeanListener processBeanListener : listeners)
+		{
+			try
+			{
+				processBeanListener.processUpdated(eventDescription);
 			}
 			catch (Exception e) 
 			{
@@ -250,9 +294,9 @@ public class ProcessBean
 	 * second parameter.
 	 * @param errorMessage
 	 */
-	public void setError(String errorMessage)
+	public void setError(String errorMessage, Object... args)
 	{
-		setError(errorMessage, null);
+		setError(errorMessage, null, args);
 	}
 
 	/**
@@ -261,8 +305,9 @@ public class ProcessBean
 	 * @param errorMessage
 	 * @param exception The exception that caused the process to fail. May be null if the error was not related to an exception.
 	 */
-	public void setError(String errorMessage, Throwable exception)
+	public void setError(String errorMessage, Throwable exception, Object... args)
 	{
+		errorMessage = processDescription(errorMessage, args);
 		this.errorMessage = errorMessage;
 		this.exception = exception;
 		setStatus(ERROR);

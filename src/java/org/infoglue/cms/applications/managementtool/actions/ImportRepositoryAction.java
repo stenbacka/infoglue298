@@ -257,12 +257,12 @@ public class ImportRepositoryAction extends InfoGlueAbstractAction
 					if(toEncoding == null)
 						toEncoding = "utf-8";
 					
-					if(replacements.indexOf("å") == -1 && 
-					   replacements.indexOf("ä") == -1 && 
-					   replacements.indexOf("ö") == -1 && 
-					   replacements.indexOf("Å") == -1 && 
-					   replacements.indexOf("Ä") == -1 && 
-					   replacements.indexOf("Ö") == -1)
+					if(replacements.indexOf("ï¿½") == -1 && 
+					   replacements.indexOf("ï¿½") == -1 && 
+					   replacements.indexOf("ï¿½") == -1 && 
+					   replacements.indexOf("ï¿½") == -1 && 
+					   replacements.indexOf("ï¿½") == -1 && 
+					   replacements.indexOf("ï¿½") == -1)
 					{
 						replacements = new String(replacements.getBytes(fromEncoding), toEncoding);
 					}
@@ -355,7 +355,6 @@ public class ImportRepositoryAction extends InfoGlueAbstractAction
 	{
 		String exportId = "Import_" + visualFormatter.formatDate(new Date(), "yyyy-MM-dd_HHmm");
 		ProcessBean processBean = ProcessBean.createProcessBean(ImportRepositoryAction.class.getName(), exportId, getInfoGluePrincipal());
-		ProcessBean processBean = ProcessBean.createProcessBean(ImportRepositoryAction.class.getName(), exportId);
 		
 		OptimizedImportController.importRepositories(file, this.onlyLatestVersions, this.standardReplacement, this.replacements, processBean);
 		
@@ -385,7 +384,6 @@ public class ImportRepositoryAction extends InfoGlueAbstractAction
 				
 				String exportId = "Copy_Import_" + visualFormatter.formatDate(new Date(), "yyyy-MM-dd_HHmm");
 				ProcessBean processBean = ProcessBean.createProcessBean(ImportRepositoryAction.class.getName(), exportId, getInfoGluePrincipal());
-				ProcessBean processBean = ProcessBean.createProcessBean(ImportRepositoryAction.class.getName(), exportId);
 				
 				OptimizedExportController.copy(repositories, -1, false, null, processBean, onlyLatestVersions, standardReplacement, replacements);
 
@@ -611,7 +609,6 @@ public class ImportRepositoryAction extends InfoGlueAbstractAction
 	}
 
 	public List<ProcessBean> getProcessBeans() throws SystemException
-	public List<ProcessBean> getProcessBeans()
 	{
 		return ProcessBean.getProcessBeans(ImportRepositoryAction.class.getName());
 	}

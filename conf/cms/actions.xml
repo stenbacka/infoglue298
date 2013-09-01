@@ -313,12 +313,13 @@
 		<view name="accessDenied">/cms/contenttool/viewConstraintException.vm</view>
 	</action>
 	<action name="org.infoglue.cms.applications.managementtool.actions.DeleteRepositoryAction" alias="DeleteRepository">
+		<view name="input">/cms/managementtool/viewDeleteRepositoryInput.vm</view>
 		<view name="success">org.infoglue.cms.applications.common.actions.ExtendedRedirect.action?url=ViewProcess.action#processId#processName#returnAddress</view>
 		<view name="error">/cms/managementtool/error.vm</view>
 		<!--
 		<view name="error">/cms/contenttool/error.vm</view>
 		-->
-		<view name="input">/cms/managementtool/showConstraintExceptionForRepositoryDelete.vm</view>
+<!-- 		<view name="input">/cms/managementtool/showConstraintExceptionForRepositoryDelete.vm</view> -->
 		<view name="accessDenied">/cms/contenttool/viewConstraintException.vm</view>
 	</action>
 	<action name="org.infoglue.cms.applications.managementtool.actions.CreateRepositoryAction" alias="CreateRepository">

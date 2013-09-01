@@ -29,8 +29,11 @@ import org.infoglue.cms.applications.databeans.ProcessBean;
 import org.infoglue.cms.controllers.kernel.impl.simple.RepositoryController;
 import org.infoglue.cms.entities.management.RepositoryVO;
 import org.infoglue.cms.exception.AccessConstraintException;
+import org.infoglue.cms.exception.Bug;
 import org.infoglue.cms.exception.ConstraintException;
 import org.infoglue.cms.exception.SystemException;
+import org.infoglue.cms.util.StringManager;
+import org.infoglue.cms.util.StringManagerFactory;
 
 /**
  * This action removes a repository from the system.
@@ -48,6 +51,7 @@ public class DeleteRepositoryAction extends InfoGlueAbstractAction
 	private String returnAddress = null;
 	private String processId;
 	private String processName;
+	private Boolean deleteServiceBindings = false;
 
 	public DeleteRepositoryAction()
 	{
@@ -80,9 +84,10 @@ public class DeleteRepositoryAction extends InfoGlueAbstractAction
 			else
 			{
 				logger.info("Will start delete for repository.id: " + this.getRepositoryId());
-				processBean = ProcessBean.createProcessBean(processName, processId, getInfoGluePrincipal());
+				StringManager stringManager = StringManagerFactory.getPresentationStringManager("org.infoglue.cms.applications", getLocale());
+				processBean = ProcessBean.createProcessBean(processName, processId, getInfoGluePrincipal(), stringManager);
 				processBean.setAutoRemoveOnSuccess(true);
-				RepositoryController.getController().delete(this.repositoryVO, this.getInfoGluePrincipal().getName(), forced, this.getInfoGluePrincipal(), processBean);
+				RepositoryController.getController().delete(this.repositoryVO, this.getInfoGluePrincipal().getName(), forced, this.getInfoGluePrincipal(), deleteServiceBindings, processBean);
 			}
 
 			this.returnAddress = "ViewListRepository.action";
@@ -100,6 +105,24 @@ public class DeleteRepositoryAction extends InfoGlueAbstractAction
 			else
 				throw ce;
 		}
+	}
+
+	public String doInput() throws SystemException, ConstraintException, Bug
+	{
+		boolean hasAccessToManagementTool = hasAccessTo("ManagementTool.Read");
+		if(!hasAccessToManagementTool)
+		{
+			throw new AccessConstraintException("Repository.delete", "1003");
+		}
+
+		if (repositoryVO == null || repositoryVO.getRepositoryId() == null)
+		{
+			throw new SystemException("No repository ID given. This should not happen during normal operations.");
+		}
+
+		repositoryVO = RepositoryController.getController().getRepositoryVOWithId(getRepositoryId());
+
+		return "input";
 	}
 
 	public String doExecute() throws ConstraintException, Exception 
@@ -140,6 +163,21 @@ public class DeleteRepositoryAction extends InfoGlueAbstractAction
 	public String getProcessName()
 	{
 		return processName;
+	}
+	
+	public String getName()
+	{
+		return repositoryVO.getName();
+	}
+
+	public Boolean getDeleteServiceBindings()
+	{
+		return deleteServiceBindings;
+	}
+
+	public void setDeleteServiceBindings(Boolean deleteServiceBindings)
+	{
+		this.deleteServiceBindings = deleteServiceBindings;
 	}
 
 }

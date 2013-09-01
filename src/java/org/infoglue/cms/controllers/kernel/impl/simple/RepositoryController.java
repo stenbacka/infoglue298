@@ -25,9 +25,11 @@ package org.infoglue.cms.controllers.kernel.impl.simple;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Queue;
 
 import org.apache.log4j.Logger;
@@ -36,6 +38,7 @@ import org.exolab.castor.jdo.OQLQuery;
 import org.exolab.castor.jdo.PersistenceException;
 import org.exolab.castor.jdo.QueryResults;
 import org.infoglue.cms.applications.databeans.ProcessBean;
+import org.infoglue.cms.applications.databeans.ReferenceBean;
 import org.infoglue.cms.controllers.kernel.impl.simple.SiteNodeController.DeleteSiteNodeParams;
 import org.infoglue.cms.entities.content.Content;
 import org.infoglue.cms.entities.content.ContentVO;
@@ -44,12 +47,14 @@ import org.infoglue.cms.entities.management.Language;
 import org.infoglue.cms.entities.management.Repository;
 import org.infoglue.cms.entities.management.RepositoryLanguage;
 import org.infoglue.cms.entities.management.RepositoryVO;
+import org.infoglue.cms.entities.management.TableCount;
 import org.infoglue.cms.entities.management.impl.simple.RepositoryImpl;
 import org.infoglue.cms.entities.structure.SiteNodeVO;
 import org.infoglue.cms.exception.Bug;
 import org.infoglue.cms.exception.ConstraintException;
 import org.infoglue.cms.exception.SystemException;
 import org.infoglue.cms.security.InfoGluePrincipal;
+import org.infoglue.cms.util.CmsPropertyHandler;
 import org.infoglue.cms.util.ConstraintExceptionBuffer;
 import org.infoglue.cms.util.sorters.ReflectionComparator;
 import org.infoglue.deliver.util.CacheController;
@@ -92,11 +97,35 @@ public class RepositoryController extends BaseController
 //		}
 //		batch.add(content.getContentId());
 //	}
+	
+	private Integer getTotalNumberSiteNodes(Integer repositoryId)
+	{
+		try
+		{
+			String tableName = "cmSiteNode";
+			if(CmsPropertyHandler.getUseShortTableNames().equalsIgnoreCase("true"))
+			{
+				tableName = "cmSiNo";
+			}
+			TableCount tableCount = BaseController.getTableCount(tableName);
+			if (tableCount != null)
+			{
+				return tableCount.getCount();
+			}
+		}
+		catch (Exception ex)
+		{
+			logger.warn("Failed to compute number of site nodes in repository. Message: " + ex.getMessage());
+		}
+		return null;
+	}
 
 	/**
 	 * This method removes a Repository from the system and also cleans out all depending repositoryLanguages.
+	 * The method will return before the repository is deleted. The process of the deletion will be reported in the
+	 * provided <em>processBean</em>.
 	 */
-	public void delete(final RepositoryVO repositoryVO, final String userName, final boolean forceDelete, final InfoGluePrincipal infoGluePrincipal, final ProcessBean processBean) throws ConstraintException, SystemException
+	public void delete(final RepositoryVO repositoryVO, final String userName, final boolean forceDelete, final InfoGluePrincipal infoGluePrincipal, final boolean skipServiceBindings, final ProcessBean processBean) throws ConstraintException, SystemException
 	{
 		new Thread()
 		{
@@ -105,7 +134,7 @@ public class RepositoryController extends BaseController
 				try
 				{
 					processBean.setStatus(ProcessBean.RUNNING);
-					processBean.updateProcess("Initializing repository delete operation");
+					processBean.updateProcess("tool.managementtool.repository.delete.process.init");
 					Database db = CastorDatabaseService.getThreadDatabase();
 					ConstraintExceptionBuffer ceb = new ConstraintExceptionBuffer();
 
@@ -114,29 +143,33 @@ public class RepositoryController extends BaseController
 					try
 					{
 						repository = getRepositoryWithId(repositoryVO.getRepositoryId(), db);
-						
-//						LinkedList<List<Integer>> batches = new LinkedList<List<Integer>>();
-//						batches.add(new ArrayList<Integer>());
-//						
-//						ContentVO content = ContentController.getContentController().getRootContentVO(repositoryVO.getRepositoryId(), db);
-//						x(batches, content, db);
-//						System.out.println("Num batches: " + batches.size());
-//						System.out.println("Batches: " + batches);
+
+						processBean.updateProcess("tool.managementtool.repository.delete.process.init");
+
+						DeleteSiteNodeParams params = new DeleteSiteNodeParams();
+						Map<String, List<ReferenceBean>> siteNodeContactPersons = new HashMap<String, List<ReferenceBean>>();
+						params.setContactPersons(siteNodeContactPersons);
+						params.setForceDelete(forceDelete);
+						params.setSkipServiceBindings(skipServiceBindings);
+						params.setProcessBean(processBean);
+						params.setTotalSiteNodes(getTotalNumberSiteNodes(repositoryVO.getRepositoryId()));
+						SiteNodeController.getController().deleteSiteNodesInRepository(repositoryVO.getRepositoryId(), infoGluePrincipal, params, db);
+
+						processBean.updateProcess("tool.managementtool.repository.delete.process.deleteContents");
+						ContentController.getContentController().deleteContentInRepository(repositoryVO.getRepositoryId(), infoGluePrincipal, forceDelete, db);
 
 						RepositoryLanguageController.getController().deleteRepositoryLanguages(repository, db);
 
-						processBean.updateProcess("Deleting SiteNodes");
-						DeleteSiteNodeParams params = new DeleteSiteNodeParams();
-						params.setForceDelete(forceDelete);
-						SiteNodeController.getController().deleteSiteNodesInRepository(repositoryVO.getRepositoryId(), infoGluePrincipal, params, db);
-						processBean.updateProcess("Deleting Contents");
-						ContentController.getContentController().deleteContentInRepository(repositoryVO.getRepositoryId(), infoGluePrincipal, forceDelete, db);
 						db.remove(repository);
 
-						//If any of the validations or setMethods reported an error, we throw them up now before create.
+						//If any of the validations or setMethods reported an error, we throw them up now before remove.
 						ceb.throwIfNotEmpty();
 
 						commitThreadTransaction();
+						
+						processBean.updateProcess("tool.managementtool.repository.delete.process.notifySiteNodes");
+						SiteNodeController.getController().notifyContactPersonsForSiteNode(siteNodeContactPersons);
+						
 						processBean.setStatus(ProcessBean.FINISHED);
 					}
 					catch(ConstraintException ce)

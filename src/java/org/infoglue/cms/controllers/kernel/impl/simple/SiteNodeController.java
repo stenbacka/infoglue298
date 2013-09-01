@@ -34,12 +34,14 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Callable;
 
 import org.apache.log4j.Logger;
 import org.exolab.castor.jdo.Database;
 import org.exolab.castor.jdo.OQLQuery;
 import org.exolab.castor.jdo.QueryResults;
 import org.infoglue.cms.applications.common.VisualFormatter;
+import org.infoglue.cms.applications.databeans.ProcessBean;
 import org.infoglue.cms.applications.databeans.ReferenceBean;
 import org.infoglue.cms.applications.databeans.ReferenceVersionBean;
 import org.infoglue.cms.entities.content.Content;
@@ -54,6 +56,7 @@ import org.infoglue.cms.entities.management.RepositoryVO;
 import org.infoglue.cms.entities.management.ServiceDefinition;
 import org.infoglue.cms.entities.management.ServiceDefinitionVO;
 import org.infoglue.cms.entities.management.SiteNodeTypeDefinition;
+import org.infoglue.cms.entities.management.TableCount;
 import org.infoglue.cms.entities.management.impl.simple.RepositoryImpl;
 import org.infoglue.cms.entities.management.impl.simple.SiteNodeTypeDefinitionImpl;
 import org.infoglue.cms.entities.structure.ServiceBindingVO;
@@ -189,29 +192,28 @@ public class SiteNodeController extends BaseController
         }
     
         return siteNode;
-    }
-    
+	}
 
 	public void deleteSiteNodesInRepository(Integer repositoryId, InfoGluePrincipal infogluePrincipal, DeleteSiteNodeParams params, Database db) throws Exception
 	{
 		SiteNode siteNode = getRootSiteNode(repositoryId, db);
 		params.setExcludeReferencesInSite(true);
-		delete(siteNode.getValueObject(), infogluePrincipal, params);
+		delete(siteNode.getValueObject(), infogluePrincipal, params, db);
 	}
 
 	public static class DeleteSiteNodeParams
 	{
-//		private boolean skipRelationCheck = false;
 		private boolean skipServiceBindings = false;
 		private boolean forceDelete = false;
 		private boolean excludeReferencesInSite = false;
 		private boolean notifyContactPersons = CmsPropertyHandler.getNotifyResponsibleOnReferenceChange();
 		private Map<String, List<ReferenceBean>> contactPersons = null;
+		private int totalSiteNodes;
 
-//		public void setSkipRelationCheck(boolean skipRelationCheck)
-//		{
-//			this.skipRelationCheck = skipRelationCheck;
-//		}
+		private ProcessBean processBean = null;
+		private String stepKey;
+		private int deleteCounter = 0;
+
 		public void setSkipServiceBindings(boolean skipServiceBindings)
 		{
 			this.skipServiceBindings = skipServiceBindings;
@@ -231,6 +233,31 @@ public class SiteNodeController extends BaseController
 		public void setContactPersons(Map<String, List<ReferenceBean>> contactPersons)
 		{
 			this.contactPersons = contactPersons;
+		}
+		public void setProcessBean(ProcessBean processBean)
+		{
+			this.processBean = processBean;
+		}
+		public void setTotalSiteNodes(Integer totalSiteNodes)
+		{
+			this.totalSiteNodes = totalSiteNodes;
+		}
+		
+		public void incrementProcessCounter()
+		{
+			if (processBean != null)
+			{
+				processBean.updateCurrentEvent(stepKey, ++deleteCounter, totalSiteNodes);
+			}
+		}
+		
+		public void changeStep(String eventKey)
+		{
+			if (processBean != null)
+			{
+				this.stepKey = eventKey;
+				processBean.updateProcess(this.stepKey, 0, totalSiteNodes);
+			}
 		}
 	}
 
@@ -262,33 +289,16 @@ public class SiteNodeController extends BaseController
 			throw new SystemException(tr.getMessage());
 		}
 
-		if (contactPersons.size() > 0)
-		{
-			logger.info("Will notifiy people about SiteNode removals. Number of nodes: " + contactPersons.size());
-			Database contactDb = CastorDatabaseService.getDatabase();
-			try
-			{
-				beginTransaction(contactDb);
-				notifyContactPersonsForSiteNode(contactPersons, contactDb);
-				commitTransaction(contactDb);
-			}
-			catch(Throwable tr)
-			{
-				rollbackTransaction(contactDb);
-				logger.error("An error occurred so we should not contact people about SiteNode removal. Message: " + tr.getMessage());
-				logger.warn("An error occurred so we should not contact people about SiteNode removal.", tr);
-				throw new SystemException(tr.getMessage());
-			}
-		}
+		notifyContactPersonsForSiteNode(contactPersons);
 	}
 
 	public void delete(SiteNodeVO siteNodeVO, InfoGluePrincipal infogluePrincipal, DeleteSiteNodeParams params, Database db) throws ConstraintException, SystemException, Exception
 	{
+		params.changeStep("tool.managementtool.repository.delete.process.deleteSiteNodes");
 		SiteNode siteNode = getSiteNodeWithId(siteNodeVO.getSiteNodeId(), db);
 		SiteNode parent = siteNode.getParentSiteNode();
-		if(siteNodeVO.getParentSiteNodeId() != null)
+		if (siteNodeVO.getParentSiteNodeId() != null)
 		{
-			System.out.println("SN parent");
 			@SuppressWarnings("unchecked")
 			Collection<SiteNode> children = parent.getChildSiteNodes(); //getSmallSiteNodeChildrenList(siteNodeVO.getParentSiteNodeId(), db);
 			Iterator<SiteNode> childSiteNodeIterator = children.iterator();
@@ -303,7 +313,6 @@ public class SiteNodeController extends BaseController
 		}
 		else
 		{
-			System.out.println("SN no parent");
 			deleteRecursive(siteNode, null, infogluePrincipal, params, db);
 		}
 	}
@@ -315,51 +324,72 @@ public class SiteNodeController extends BaseController
 	 */
 	private void deleteRecursive(SiteNode siteNode, Iterator<SiteNode> parentIterator, InfoGluePrincipal infogluePrincipal, DeleteSiteNodeParams params, Database db) throws ConstraintException, SystemException, Exception
 	{
-		List<ReferenceBean> referenceBeanList = RegistryController.getController().getReferencingObjectsForSiteNode(siteNode.getSiteNodeId(), -1, params.excludeReferencesInSite, db);
-
-		if(referenceBeanList != null && referenceBeanList.size() > 0 && !params.forceDelete)
-			throw new ConstraintException("SiteNode.stateId", "3405");
-
-		@SuppressWarnings("unchecked")
-		Collection<SiteNode> children = siteNode.getChildSiteNodes(); //getSmallSiteNodeChildrenList(siteNode.getSiteNodeId(), db);
-		System.out.println("SN children: " + children.size());
-		Iterator<SiteNode> childIterator = children.iterator();
-		while(childIterator.hasNext())
+		try
 		{
-			SiteNode childSiteNode = childIterator.next();
-			deleteRecursive(childSiteNode, childIterator, infogluePrincipal, params, db);
-		}
-		siteNode.setChildSiteNodes(new ArrayList<SiteNode>());
-
-		if(params.forceDelete || getIsDeletable(siteNode, infogluePrincipal, db))
-		{
-			SiteNodeVersionController.getController().deleteVersionsForSiteNode(siteNode, db, infogluePrincipal);
-			if (!params.skipServiceBindings)
+			List<ReferenceBean> referenceBeanList = RegistryController.getController().getReferencingObjectsForSiteNode(siteNode.getSiteNodeId(), -1, params.excludeReferencesInSite, db);
+	
+			if(referenceBeanList != null && referenceBeanList.size() > 0 && !params.forceDelete)
+				throw new ConstraintException("SiteNode.stateId", "3405");
+	
+			@SuppressWarnings("unchecked")
+			Collection<SiteNode> children = siteNode.getChildSiteNodes(); //getSmallSiteNodeChildrenList(siteNode.getSiteNodeId(), db);
+			Iterator<SiteNode> childIterator = children.iterator();
+			while(childIterator.hasNext())
 			{
-				ServiceBindingController.deleteServiceBindingsReferencingSiteNode(siteNode, db);
+				SiteNode childSiteNode = childIterator.next();
+				deleteRecursive(childSiteNode, childIterator, infogluePrincipal, params, db);
 			}
-
-			if (!params.notifyContactPersons)
+			siteNode.setChildSiteNodes(new ArrayList<SiteNode>());
+	
+			if(params.forceDelete || getIsDeletable(siteNode, infogluePrincipal, db))
 			{
-				RegistryController.getController().cleanAllForSiteNode(siteNode.getSiteNodeId(), infogluePrincipal, db);
-			}
-			if (params.notifyContactPersons)
-			{
-				if (referenceBeanList != null && params.contactPersons != null)
+				SiteNodeVersionController.getController().deleteVersionsForSiteNode(siteNode, db, infogluePrincipal);
+				if (!params.skipServiceBindings)
 				{
-					logger.info("Found " + referenceBeanList.size() + " people to notify about SiteNode removal. SiteNode.id: " + siteNode.getSiteNodeId());
-					params.contactPersons.put(getSiteNodePath(siteNode.getSiteNodeId(), false, true, db), referenceBeanList);
+					ServiceBindingController.deleteServiceBindingsReferencingSiteNode(siteNode, db);
 				}
+	
+				if (!params.notifyContactPersons)
+				{
+					RegistryController.getController().cleanAllForSiteNode(siteNode.getSiteNodeId(), infogluePrincipal, db);
+				}
+				if (params.notifyContactPersons)
+				{
+					if (referenceBeanList != null && params.contactPersons != null)
+					{
+						logger.info("Found " + referenceBeanList.size() + " people to notify about SiteNode removal. SiteNode.id: " + siteNode.getSiteNodeId());
+						params.contactPersons.put(getSiteNodePath(siteNode.getSiteNodeId(), false, true, db), referenceBeanList);
+					}
+				}
+	
+				if(parentIterator != null) 
+					parentIterator.remove();
+	
+				db.remove(siteNode);
+				params.incrementProcessCounter();
 			}
-
-			if(parentIterator != null) 
-				parentIterator.remove();
-
-			db.remove(siteNode);
+			else
+			{
+				throw new ConstraintException("SiteNodeVersion.stateId", "3400");
+			}
 		}
-		else
+		catch (Throwable tr)
 		{
-			throw new ConstraintException("SiteNodeVersion.stateId", "3400");
+			/* This catch's purpose is to add some useful data to the process bean. It is not responsible for logging
+			 * the exception nor halting the execution of the delete operation.
+			 * A brief INFO-level logging is included since the catch may obscures the exception type and line number.
+			 */
+			logger.info("Error when deleting SiteNode. Message: " + tr.getMessage() + ". Type: " + tr.getClass());
+			try
+			{
+				params.processBean.setError("tool.managementtool.repository.delete.process.errorSiteNode", getSiteNodePath(siteNode.getSiteNodeId(), false, true, db), siteNode.getSiteNodeId());
+			}
+			catch (Exception processEx)
+			{
+				logger.warn("Failed to gather error information for process bean. Message: " + processEx.getMessage() + ". Type: " + processEx.getClass());
+				params.processBean.setError("tool.managementtool.repository.delete.process.errorSiteNode.noInfo");
+			}
+			throw new SystemException(tr);
 		}
 	}
 
@@ -1828,13 +1858,39 @@ public class SiteNodeController extends BaseController
 		return result;
 	}
 
-    private void notifyContactPersonsForSiteNode(String siteNodePath, List<ReferenceBean> contacts, Database db) throws SystemException, Exception
-    {
+	/*default*/ void notifyContactPersonsForSiteNode(String siteNodePath, List<ReferenceBean> contacts, Database db) throws SystemException, Exception
+	{
 		notifyContactPersonsForSiteNode(Collections.singletonMap(siteNodePath, contacts), db);
-    }
+	}
 
-    private void notifyContactPersonsForSiteNode(Map<String, List<ReferenceBean>> contacts, Database db) throws SystemException, Exception
+	/*default*/ void notifyContactPersonsForSiteNode(Map<String, List<ReferenceBean>> contactPersons) throws SystemException
+	{
+		if (contactPersons.size() > 0)
+		{
+			Database contactDb = CastorDatabaseService.getDatabase();
+			try
+			{
+				beginTransaction(contactDb);
+				notifyContactPersonsForSiteNode(contactPersons, contactDb);
+				commitTransaction(contactDb);
+			}
+			catch(Throwable tr)
+			{
+				rollbackTransaction(contactDb);
+				logger.error("An error occurred so we should not contact people about SiteNode removal. Message: " + tr.getMessage());
+				logger.warn("An error occurred so we should not contact people about SiteNode removal.", tr);
+				throw new SystemException(tr.getMessage());
+			}
+		}
+	}
+
+	/*default*/ void notifyContactPersonsForSiteNode(Map<String, List<ReferenceBean>> contacts, Database db) throws SystemException, Exception
     {
+    	if (contacts.size() == 0)
+    	{
+    		return;
+    	}
+    	
     	Map<String, Map<String, List<ReferenceBean>>> contactMap = groupByContactPerson(contacts);
 
     	if (logger.isInfoEnabled())

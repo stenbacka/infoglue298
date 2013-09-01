@@ -77,8 +77,8 @@ public class RepositoryTester extends TestCase
 
 		try
 		{
-			// TODO: This test is not irrelevant since the delete is executed asynced.
-			RepositoryController.getController().delete(this.newRepositoryVO, "testcaseUser", false, new InfoGluePrincipal("test-user", "first", "last", "email", Collections.singletonList(new InfoGlueRole("cmsUser", "test description", null)), new ArrayList(), false, null), null);
+			// TODO: This test is not relevant since the delete is executed asynced.
+			//RepositoryController.getController().delete(this.newRepositoryVO, "testcaseUser", false, new InfoGluePrincipal("test-user", "first", "last", "email", Collections.singletonList(new InfoGlueRole("cmsUser", "test description", null)), new ArrayList(), false, null), null);
 		}
 	    catch(Exception e)
 	    {
