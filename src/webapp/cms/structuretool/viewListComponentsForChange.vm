@@ -26,8 +26,10 @@
 			}
 			else
 			{
-				var regardAsCompatible = document.getElementById("regardAsCompatible").checked;
-				var recurseChildPages = document.getElementById("recurseChildPages").checked;
+				var regardAsCompatibleElem = document.getElementById("regardAsCompatible");
+				var regardAsCompatible = regardAsCompatibleElem ? regardAsCompatibleElem.checked : false;
+				var recurseChildPagesElem = document.getElementById("recurseChildPages");
+				var recurseChildPages = recurseChildPagesElem ? recurseChildPagesElem.checked : false;
 				var recursionMethod = recurseChildPages === true ? "thisAndSubpages" : "onlyThisPage";
 				url = "ViewSiteNodePageComponents!changeComponent.action?siteNodeId=$siteNodeId&languageId=$languageId&contentId=$contentId&componentId=$!componentId&newComponentContentId=" + componentId + "&slotId=$slotId&specifyBaseTemplate=$!specifyBaseTemplate&showSimple=$showSimple&regardAsCompatible=" + regardAsCompatible + "&recursionMethod=" + recursionMethod + "&changeMethod=" + changeMethod;
 
@@ -89,10 +91,12 @@
 		function changeRepository(selectBox)
 		{
 			var repositoryId = selectBox.value;
-			var regardAsCompatible = document.getElementById("regardAsCompatible").checked;
+			var regardAsCompatibleElem = document.getElementById("regardAsCompatible");
+			var regardAsCompatible = regardAsCompatibleElem ? regardAsCompatibleElem.checked : false;
 			var changeMethod = $("input:radio[name=changeMethod]:checked").val();
 			changeMethod = changeMethod || '';
-			var recurseChildPages = document.getElementById("recurseChildPages").checked;
+			var recurseChildPagesElem = document.getElementById("recurseChildPages");
+			var recurseChildPages = recurseChildPagesElem ? recurseChildPagesElem.checked : false;
 			var recursionMethod = recurseChildPages === true ? "thisAndSubpages" : "onlyThisPage";
 			var url = "ViewSiteNodePageComponents!listComponentsForChange.action?siteNodeId=$siteNodeId&languageId=$languageId&contentId=$contentId&parentComponentId=$!parentComponentId&slotId=$slotId&componentId=$!componentId&specifyBaseTemplate=$!specifyBaseTemplate&showSimple=$showSimple&$allowedComponentNamesAsUrlEncodedString&$disallowedComponentNamesAsUrlEncodedString&$allowedComponentGroupNamesAsUrlEncodedString&filterRepositoryId=" + repositoryId + "&regardAsCompatible=" + regardAsCompatible + "&recursionMethod=" + recursionMethod + "&changeMethod=" + changeMethod;
 			//alert("url:" + url);
