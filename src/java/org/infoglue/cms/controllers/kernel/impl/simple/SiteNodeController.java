@@ -1829,7 +1829,8 @@ public class SiteNodeController extends BaseController
 									if (referenceVersion.getReferencingObject() instanceof ContentVersionVO)
 									{
 										ContentVersionVO contentVersionVO = (ContentVersionVO)referenceVersion.getReferencingObject();
-										url = CmsPropertyHandler.getCmsFullBaseUrl() + "/ViewContentVersion!standalone.action?contentId=" + ((ContentVO)reference.getReferencingCompletingObject()).getContentId() + "&languageId=" + contentVersionVO.getLanguageId();
+										//url = CmsPropertyHandler.getCmsFullBaseUrl() + "/ViewContentVersion!standalone.action?contentId=" + ((ContentVO)reference.getReferencingCompletingObject()).getContentId() + "&languageId=" + contentVersionVO.getLanguageId();
+										url = CmsPropertyHandler.getCmsFullBaseUrl() + "/ViewCMSTool.action?contentId=" + ((ContentVO)reference.getReferencingCompletingObject()).getContentId() + "&languageId=" + contentVersionVO.getLanguageId();
 										contentBuilder.append("<li>");
 										contentBuilder.append("<a href=\"" + url + "\">");
 										LanguageVO contentVersionLanguageVO = LanguageController.getController().getLanguageVOWithId(contentVersionVO.getLanguageId(), db);
@@ -1873,7 +1874,8 @@ public class SiteNodeController extends BaseController
 						}
 						else
 						{
-							url = CmsPropertyHandler.getCmsFullBaseUrl() + "/DeleteContent!fixPage.action?siteNodeId=" + ((SiteNodeVO)reference.getReferencingCompletingObject()).getSiteNodeId() + "&contentId=-1";
+							url = CmsPropertyHandler.getCmsFullBaseUrl() + "/ViewCMSTool.action?siteNodeId=" + ((SiteNodeVO)reference.getReferencingCompletingObject()).getSiteNodeId() + "&contentId=-1";
+							//url = CmsPropertyHandler.getCmsFullBaseUrl() + "/DeleteContent!fixPage.action?siteNodeId=" + ((SiteNodeVO)reference.getReferencingCompletingObject()).getSiteNodeId() + "&contentId=-1";
 							siteNodeBuilder.append("<li><a href=\"" + url + "\">" + path + "</a></li>");
 						}
 					}

@@ -34,32 +34,34 @@ import org.infoglue.cms.applications.cmstool.actions.ViewCMSAbstractToolAction;
 public class ViewContentToolAction extends ViewCMSAbstractToolAction
 {
 	private static final long serialVersionUID = 1L;
+	
+	private String contentId = "-1";
+	private String languageId = "-1";
 
-	private Integer contentId;
-	private Integer languageId;
+	
+    public String doExecute() throws Exception
+    {
+        return "success";
+    }
 
-	public String doExecute() throws Exception
-	{
-		return "success";
-	}
-
-	public Integer getContentId()
+	public String getContentId() 
 	{
 		return contentId;
 	}
 
-	public void setContentId(Integer contentId)
+	public void setContentId(String contentId) 
 	{
 		this.contentId = contentId;
 	}
 
-	public Integer getLanguageId()
+	public String getLanguageId() 
 	{
 		return languageId;
 	}
 
-	public void setLanguageId(Integer languageId)
+	public void setLanguageId(String languageId) 
 	{
 		this.languageId = languageId;
 	}
+
 }

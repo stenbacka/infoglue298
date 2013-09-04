@@ -35,30 +35,30 @@ public class ViewStructureToolAction extends ViewCMSAbstractToolAction
 { 
 	private static final long serialVersionUID = 1L;
 
-	private Integer siteNodeId;
-	private Integer languageId;
+	private String siteNodeId = "-1";
+	private String languageId = "-1";
 
 	public String doExecute() throws Exception
     {
         return "success";
 	}
 
-	public Integer getSiteNodeId()
+	public String getSiteNodeId()
 	{
 		return siteNodeId;
 	}
 
-	public void setSiteNodeId(Integer siteNodeId)
+	public void setSiteNodeId(String siteNodeId)
 	{
 		this.siteNodeId = siteNodeId;
 	}
 
-	public Integer getLanguageId()
+	public String getLanguageId()
 	{
 		return languageId;
 	}
 
-	public void setLanguageId(Integer languageId)
+	public void setLanguageId(String languageId)
 	{
 		this.languageId = languageId;
 	}

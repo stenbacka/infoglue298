@@ -35,63 +35,46 @@ public class ViewCMSToolAction extends InfoGlueAbstractAction
 {
 	private static final long serialVersionUID = -2904286525405758091L;
 
-	private Integer contentId;
-	private Integer siteNodeId;
-	private Integer languageId;
-	
+	private Integer contentId = -1;
+	private Integer siteNodeId = -1;
+	private Integer languageId = -1;
+
 	public String doExecute() throws Exception
     {
         return "success";
     }
-
-	@Override
-	public Integer getToolId()
-    {
-		if (contentId != null)
-		{
-			return 0;
-		}
-		else if(siteNodeId != null)
-		{
-			return 1;
-		}
-		else
-		{
-			return this.getSession().getToolId();
-		}
-    }
-
+	
 	public String doLoginStandalone() throws Exception 
 	{
 		return "loginComplete";
-	}
+	}	
 
-	public Integer getContentId()
+	public Integer getContentId() 
 	{
 		return contentId;
 	}
 
-	public void setContentId(Integer contentId)
+	public void setContentId(Integer contentId) 
 	{
 		this.contentId = contentId;
 	}
 
-	public Integer getSiteNodeId()
+	public Integer getSiteNodeId() 
 	{
 		return siteNodeId;
 	}
 
-	public void setSiteNodeId(Integer siteNodeId)
+	public void setSiteNodeId(Integer siteNodeId) 
 	{
 		this.siteNodeId = siteNodeId;
 	}
 
-	public Integer getLanguageId()
+	public Integer getLanguageId() 
 	{
 		return languageId;
 	}
 
-	public void setLanguageId(Integer languageId)
+	public void setLanguageId(Integer languageId) 
 	{
 		this.languageId = languageId;
 	}

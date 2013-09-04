@@ -37,10 +37,9 @@ import org.infoglue.cms.util.CmsPropertyHandler;
 public class ViewCMSToolHeaderAction extends InfoGlueAbstractAction
 {
 	private static final long serialVersionUID = -6699854300371586633L;
-
-	private Integer contentId;
-	private Integer siteNodeId;
-	private Integer languageId;
+	private String contentId = "-1";
+	private String siteNodeId = "-1";
+	private String languageId = "-1";
 
 	public String getUserName()
 	{
@@ -66,39 +65,37 @@ public class ViewCMSToolHeaderAction extends InfoGlueAbstractAction
     {
         return "success";
     }
-
-	public String doLoginStandalone() throws Exception
-	{
-		return "loginComplete";
-	}
-
-	public Integer getContentId()
+           
+	public String getContentId() 
 	{
 		return contentId;
 	}
 
-	public void setContentId(Integer contentId)
-	{
-		this.contentId = contentId;
-	}
-
-	public Integer getSiteNodeId()
+	public String getSiteNodeId() 
 	{
 		return siteNodeId;
 	}
 
-	public void setSiteNodeId(Integer siteNodeId)
-	{
-		this.siteNodeId = siteNodeId;
-	}
-
-	public Integer getLanguageId()
+	public String getLanguageId() 
 	{
 		return languageId;
 	}
 
-	public void setLanguageId(Integer languageId)
+	public void setContentId(String contentId) 
 	{
-		this.languageId = languageId;
+		if(contentId != null && !contentId.equals(""))
+			this.contentId = contentId;
+	}
+	
+	public void setSiteNodeId(String siteNodeId) 
+	{
+		if(siteNodeId != null && !siteNodeId.equals(""))
+			this.siteNodeId = siteNodeId;
+	}
+
+	public void setLanguageId(String languageId) 
+	{
+		if(languageId != null && !languageId.equals(""))
+			this.languageId = languageId;
 	}
 }
