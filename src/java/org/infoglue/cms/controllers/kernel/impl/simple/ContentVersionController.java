@@ -1034,7 +1034,6 @@ public class ContentVersionController extends BaseController
 	public void deleteContentVersionsForContentWithId(Integer contentId, boolean forceDelete, Database db) throws SystemException, Bug, Exception
 	{
 		List<DeleteFriendlyContentVersionImpl> versions = getDeleteFriendlyContentVersionListForContent(contentId, db);
-		System.out.println("CV versions: " + versions.size() + " contentId: " + contentId);
 		Iterator<DeleteFriendlyContentVersionImpl> contentVersionIterator = versions.iterator();
 
 		while (contentVersionIterator.hasNext())
@@ -1053,15 +1052,12 @@ public class ContentVersionController extends BaseController
 			{
 				digitalAsset = digitalAssetIt.next();
 				boolean success = digitalAsset.getContentVersions().remove(contentVersion);
-				System.out.println("Delete DA->CV binding: " + success);
 				digitalAssetIt.remove();
 				if (digitalAsset.getContentVersions().size() == 0)
 				{
-					System.out.println("Last reference to DA. removing...");
 					db.remove(digitalAsset);
 				}
 			}
-			System.out.println("CV.da-size: " + contentVersion.getDigitalAssets().size());
 //			DigitalAssetController.getController().deleteByContentVersion(heavyVersion, db);
 
 //			Content content = contentVersion.getOwningContent();

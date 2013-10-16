@@ -528,7 +528,6 @@ public class ContentCategoryController extends BaseController
 		params.add(versionId);
 		@SuppressWarnings("unchecked")
 		Collection<ContentCategory> contentCategoryList = executeQuery(findByContentVersionId, params, db);
-		System.out.println("CV-CC : " + contentCategoryList.size() + " versionId: " + versionId);
 		for (ContentCategory cc : contentCategoryList)
 		{
 			db.remove(cc);

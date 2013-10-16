@@ -377,7 +377,7 @@ public class SiteNodeController extends BaseController
 		{
 			/* This catch's purpose is to add some useful data to the process bean. It is not responsible for logging
 			 * the exception nor halting the execution of the delete operation.
-			 * A brief INFO-level logging is included since the catch may obscures the exception type and line number.
+			 * A brief INFO-level logging is included since the catch may obscure the exception type and line number.
 			 */
 			logger.info("Error when deleting SiteNode. Message: " + tr.getMessage() + ". Type: " + tr.getClass());
 			try
@@ -401,15 +401,16 @@ public class SiteNodeController extends BaseController
 	{
 		boolean isDeletable = true;
 
-		SiteNodeVersionVO latestSiteNodeVersionVO = SiteNodeVersionController.getController().getLatestActiveSiteNodeVersionVO(db, siteNode.getId());
-		if(latestSiteNodeVersionVO != null && latestSiteNodeVersionVO.getIsProtected().equals(SiteNodeVersionVO.YES))
+		SiteNodeVersion latestSiteNodeVersion = SiteNodeVersionController.getController().getLatestActiveSiteNodeVersion(db, siteNode.getId());
+		if(latestSiteNodeVersion != null && latestSiteNodeVersion.getIsProtected().equals(SiteNodeVersionVO.YES))
 		{
-			boolean hasAccess = AccessRightController.getController().getIsPrincipalAuthorized(db, infogluePrincipal, "SiteNodeVersion.DeleteSiteNode", "" + latestSiteNodeVersionVO.getId());
+			boolean hasAccess = AccessRightController.getController().getIsPrincipalAuthorized(db, infogluePrincipal, "SiteNodeVersion.DeleteSiteNode", "" + latestSiteNodeVersion.getId());
 			if (!hasAccess)
 				return false;
 		}
 
-		List<SiteNodeVersion> siteNodeVersions = SiteNodeVersionController.getController().getSiteNodeVersionListForSiteNode(siteNode.getSiteNodeId(), db);
+		@SuppressWarnings("unchecked")
+		Collection<SiteNodeVersion> siteNodeVersions = (Collection<SiteNodeVersion>)siteNode.getSiteNodeVersions();
 		if(siteNodeVersions != null)
 		{
 			Iterator<SiteNodeVersion> versionIterator = siteNodeVersions.iterator();

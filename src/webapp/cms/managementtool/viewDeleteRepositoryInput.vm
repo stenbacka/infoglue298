@@ -22,7 +22,7 @@
 			<tr>
 				<td>
 					<label>
-						<input type="checkbox" name="skipServiceBindings" #if( $deleteServiceBindings == true ) checked="checked" #end />
+						<input type="checkbox" name="skipServiceBindings" style="width: auto;" #if( $deleteServiceBindings == true ) checked="checked" #end />
 						$ui.getString("tool.managementtool.deleteRepository.deleteServiceBindings")
 					</label>
 				</td>
