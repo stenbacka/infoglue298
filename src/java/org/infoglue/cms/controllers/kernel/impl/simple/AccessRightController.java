@@ -1267,7 +1267,8 @@ public class AccessRightController extends BaseController
 				
 		List accessRightList = this.getAccessRightListOnlyReadOnly(interceptionPointVO.getId(), extraParameters, db);
 		//If no access rights are set for the content version we should assume it was not protected on version level.
-		if((interceptionPointName.equalsIgnoreCase("ContentVersion.Read") || 
+		if((interceptionPointName.equalsIgnoreCase("ComponentPropertyEditor.EditProperty") ||
+		   interceptionPointName.equalsIgnoreCase("ContentVersion.Read") || 
 		   interceptionPointName.equalsIgnoreCase("ContentVersion.Write") || 
 		   interceptionPointName.equalsIgnoreCase("ContentVersion.Delete") || 
 		   interceptionPointName.equalsIgnoreCase("ContentVersion.Publish")) && 
