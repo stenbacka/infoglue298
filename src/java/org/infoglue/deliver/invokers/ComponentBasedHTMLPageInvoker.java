@@ -34,6 +34,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
 
 import org.apache.log4j.Logger;
 import org.dom4j.Attribute;
@@ -178,6 +179,7 @@ public class ComponentBasedHTMLPageInvoker extends PageInvoker
 		    	//logger.info("componentXML: " + componentXML);
 		    	logger.info("contentId" + contentId);
 		    	logger.info("pagePartString" + pagePartString);
+				pagePartString = Matcher.quoteReplacement(pagePartString);
 		    	String newComponentXML = componentXML.replaceAll("<component contentId=\"" + contentId + ".*?</component>", "" + pagePartString);
 		    	//logger.info("newComponentXML: " + newComponentXML);
 		    	resultComponentXML = newComponentXML;
